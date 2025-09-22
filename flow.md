@@ -126,5 +126,5 @@ data/raw/    results/*_features_*    StandardScaler   Ensemble      *_results.cs
 - **No retraining**: This is the production inference path using the pre-trained best model
 - **Fallback handling**: If labels are unavailable, uses unlabeled-safe feature builder
 - **Reproducibility**: All preprocessing and model parameters are saved in the bundle
-- **Validation**: See `MIGRATION.md` for validation commands and expected outputs
+
 
