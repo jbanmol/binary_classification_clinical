@@ -11,13 +11,25 @@ What it does (single command):
 
 Dependencies: none beyond the project requirements.
 """
+import argparse
 import os
 import sys
 import json
 from pathlib import Path
 from typing import List
 
+# Apply OpenMP fix automatically for macOS users
+if sys.platform == 'darwin':
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['OMP_MAX_ACTIVE_LEVELS'] = '1'
+    os.environ['OPENBLAS_NUM_THREADS'] = '1'
+    os.environ['MKL_NUM_THREADS'] = '1'
+    os.environ['VECLIB_MAXIMUM_THREADS'] = '1'
+    os.environ['NUMEXPR_NUM_THREADS'] = '1'
+
 import pandas as pd
+import subprocess
+import shutil
 
 # Ensure project root is on sys.path so we can import local modules
 PROJ_ROOT = Path(__file__).resolve().parents[1]
@@ -28,54 +40,66 @@ if str(PROJ_ROOT) not in sys.path:
 ######################## Stability: thread limits (no algo change) ########################
 # On some macOS setups, OpenMP-backed libs (BLAS/UMAP) can segfault. To improve robustness
 # without changing any modeling/preprocessing logic, limit thread counts if not already set.
-# Also suppress OpenMP deprecation warnings on macOS.
-try:
-    from src.openmp_fix import apply_openmp_fix
-    apply_openmp_fix()
-except ImportError:
-    # Fallback to original thread limiting if openmp_fix is not available
-    for _k, _v in (
-        ("OMP_NUM_THREADS", "1"),
-        ("OPENBLAS_NUM_THREADS", "1"),
-        ("MKL_NUM_THREADS", "1"),
-        ("VECLIB_MAXIMUM_THREADS", "1"),
-        ("NUMEXPR_NUM_THREADS", "1"),
-    ):
-        os.environ.setdefault(_k, _v)
+for _k, _v in (
+    ("OMP_NUM_THREADS", "1"),
+    ("OPENBLAS_NUM_THREADS", "1"),
+    ("MKL_NUM_THREADS", "1"),
+    ("VECLIB_MAXIMUM_THREADS", "1"),
+    ("NUMEXPR_NUM_THREADS", "1"),
+):
+    os.environ.setdefault(_k, _v)
 ###########################################################################################
 from scripts.bagged_end_to_end import build_child_dataset  # feature construction from raw (labeled)
-from scripts.predict_cli import load_bundle, predict  # best model bundle scoring
+from scripts.predict_cli import load_bundle  # best model bundle scoring
 from rag_system.research_engine import ColoringDataProcessor  # for unlabeled fallback
 
 
 def build_child_dataset_unlabeled(raw_folder: Path):
     """Fallback builder: create child-level dataset from raw JSONs without labels.
     Mirrors the aggregation used during training, but does not filter on labels.
-    Returns (X_df, child_ids).
+    Returns (X_df_aligned_like, child_ids, raw_features_df_before_bins).
     """
     # Walk raw_folder for Coloring_*.json
     json_files = list(raw_folder.rglob('Coloring_*.json'))
     if not json_files:
         raise RuntimeError(f"No Coloring_*.json files found under {raw_folder}")
 
-    proc = ColoringDataProcessor()  # will try to load labels; OK if missing
-    rows = []
-    for fp in json_files:
-        ses = proc.parse_session_file(fp)
-        if not ses:
-            continue
-        feats = proc.extract_behavioral_features(ses)
-        if feats:
-            rows.append(feats)
-
-    if not rows:
-        raise RuntimeError("Parsed zero sessions from raw JSONs")
-
-    import numpy as np
-    import pandas as pd
-
-    df = pd.DataFrame(rows)
-    # Basic expected numeric columns (subset will be present depending on data)
+    print(f"Found {len(json_files)} Coloring_*.json files")
+    
+    # Use ColoringDataProcessor to extract features
+    processor = ColoringDataProcessor()
+    all_features = []
+    child_ids = []
+    
+    for json_file in json_files:
+        try:
+            # Extract child_id from filename (assuming format: Coloring_<child_id>_*.json)
+            filename = json_file.name
+            child_id = filename.split('_')[1] if '_' in filename else json_file.stem
+            
+            # Parse the session file
+            session_data = processor.parse_session_file(json_file)
+            if session_data is not None:
+                # Extract behavioral features
+                features = processor.extract_behavioral_features(session_data)
+                if features is not None:
+                    all_features.append(features)
+                    child_ids.append(child_id)
+                    print(f"  ✅ Processed {filename} -> child_id: {child_id}")
+                else:
+                    print(f"  ⚠️  Skipped {filename} (no valid features)")
+            else:
+                print(f"  ⚠️  Skipped {filename} (no valid session data)")
+        except Exception as e:
+            print(f"  ❌ Error processing {json_file}: {e}")
+    
+    if not all_features:
+        raise RuntimeError("No valid features extracted from any files")
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(all_features)
+    
+    # Define the canonical numeric features (same as training)
     NUMERIC_FEATURES_CANON = [
         'velocity_mean', 'velocity_std', 'velocity_max', 'velocity_cv',
         'tremor_indicator', 'acc_magnitude_mean', 'acc_magnitude_std',
@@ -85,192 +109,278 @@ def build_child_dataset_unlabeled(raw_folder: Path):
         'completion_progress_rate', 'avg_time_between_points',
         'canceled_touches'
     ]
+    
+    # Features intersection
     available = [c for c in NUMERIC_FEATURES_CANON if c in df.columns]
     if not available:
-        raise RuntimeError("No expected numeric features present in parsed data")
+        raise RuntimeError("No expected numeric features present in data")
 
-    # Aggregate to child-level
+    print(f"Using {len(available)} available features: {available}")
+
+    # Child aggregation (same as training)
     agg = df.groupby('child_id')[available].mean().reset_index()
     sess_count = df.groupby('child_id').size().rename('session_count').reset_index()
     agg = agg.merge(sess_count, on='child_id', how='left')
 
-    # Domain features (same as training-time builder)
+    # Engineer domain features (same as training)
     eps = 1e-8
+    
+    # Per-zone dynamics
     if 'unique_zones' in agg.columns and 'total_touch_points' in agg.columns:
         agg['touches_per_zone'] = agg['total_touch_points'] / (agg['unique_zones'] + eps)
     if 'unique_zones' in agg.columns and 'stroke_count' in agg.columns:
         agg['strokes_per_zone'] = agg['stroke_count'] / (agg['unique_zones'] + eps)
     if 'unique_zones' in agg.columns and 'session_duration' in agg.columns:
         agg['zones_per_minute'] = agg['unique_zones'] / (agg['session_duration'] / 60.0 + eps)
-    if 'velocity_mean' in agg.columns and 'velocity_std' in agg.columns:
+    
+    # Velocity and acceleration ratios
+    if 'velocity_std' in agg.columns and 'velocity_mean' in agg.columns:
         agg['vel_std_over_mean'] = agg['velocity_std'] / (agg['velocity_mean'] + eps)
-    if 'acc_magnitude_mean' in agg.columns and 'acc_magnitude_std' in agg.columns:
+    if 'acc_magnitude_std' in agg.columns and 'acc_magnitude_mean' in agg.columns:
         agg['acc_std_over_mean'] = agg['acc_magnitude_std'] / (agg['acc_magnitude_mean'] + eps)
+    
+    # Inter-point behavior
     if 'avg_time_between_points' in agg.columns and 'session_duration' in agg.columns:
         agg['avg_ibp_norm'] = agg['avg_time_between_points'] / (agg['session_duration'] + eps)
-        agg['interpoint_rate'] = (agg['session_duration'] + eps) / (agg['avg_time_between_points'] + eps)
+        agg['interpoint_rate'] = 1.0 / (agg['avg_time_between_points'] + eps)
+    
+    # Touch and stroke rates
     if 'total_touch_points' in agg.columns and 'session_duration' in agg.columns:
-        agg['touch_rate'] = agg['total_touch_points'] / (agg['session_duration'] + eps)
+        agg['touch_rate'] = agg['total_touch_points'] / (agg['session_duration'] / 60.0 + eps)
     if 'stroke_count' in agg.columns and 'session_duration' in agg.columns:
-        agg['stroke_rate'] = agg['stroke_count'] / (agg['session_duration'] + eps)
+        agg['stroke_rate'] = agg['stroke_count'] / (agg['session_duration'] / 60.0 + eps)
+    
+    # Save a copy before quantile bins as "raw" features
+    raw_features_df = agg.copy()
+    
+    # Quantile-based binning for key ratios
+    for col in ['touch_rate', 'strokes_per_zone', 'vel_std_over_mean', 'acc_std_over_mean', 'zones_per_minute', 'interpoint_rate']:
+        if col in agg.columns:
+            q25, q50, q75 = agg[col].quantile([0.25, 0.5, 0.75])
+            agg[f'bin_{col}_0'] = (agg[col] <= q25).astype(int)
+            agg[f'bin_{col}_1'] = ((agg[col] > q25) & (agg[col] <= q50)).astype(int)
+            agg[f'bin_{col}_2'] = ((agg[col] > q50) & (agg[col] <= q75)).astype(int)
+            agg[f'bin_{col}_3'] = (agg[col] > q75).astype(int)
+    
+    # Extract child_ids for return
+    child_ids = agg['child_id'].tolist()
+    
+    # Remove child_id from features
+    X_df = agg.drop('child_id', axis=1)
+    
+    print(f"Built dataset with {len(X_df)} samples and {len(X_df.columns)} features")
+    return X_df, child_ids, raw_features_df
 
-    # Quantile bin flags
-    def _add_bin_flags(df_in: pd.DataFrame, col: str, q: int = 4) -> pd.DataFrame:
-        if col not in df_in.columns:
-            return df_in
-        s = df_in[col]
-        try:
-            binned = pd.qcut(s.rank(method='first'), q=q, labels=False, duplicates='drop')
-        except Exception:
-            return df_in
-        dummies = pd.get_dummies(binned, prefix=f"bin_{col}")
-        return pd.concat([df_in, dummies], axis=1)
 
-    for ratio_col in ['touch_rate', 'strokes_per_zone', 'vel_std_over_mean', 'acc_std_over_mean', 'zones_per_minute', 'interpoint_rate']:
-        agg = _add_bin_flags(agg, ratio_col, q=4)
-
-    X = agg.drop(columns=['child_id'], errors='ignore').copy()
-    child_ids = agg['child_id'].astype(str).tolist()
-    return X, child_ids
-
-
-def list_raw_folders(data_dir: Path) -> List[Path]:
-    if not data_dir.exists():
+def find_raw_data_folders() -> List[Path]:
+    """Find all raw data folders under ./data/raw/"""
+    data_raw = Path("data/raw")
+    if not data_raw.exists():
         return []
-    # Show only directories that contain at least one Coloring_*.json somewhere beneath
-    candidates = []
-    for p in sorted(data_dir.iterdir()):
-        if p.is_dir():
-            # Heuristic: accept directory; deeper validation will happen in build_child_dataset
-            candidates.append(p)
-    return candidates
+    
+    folders = [f for f in data_raw.iterdir() if f.is_dir()]
+    return sorted(folders)
 
 
-def pick_raw_folder_interactive() -> Path:
-    data_dir = PROJ_ROOT / 'data'
-    options = list_raw_folders(data_dir)
-
-    print("\nSelect a raw data folder to score:")
-    if not options:
-        print(f"No subfolders found in {data_dir}. You can type a path manually.")
+def interactive_folder_selection() -> Path:
+    """Interactive folder selection with fallback to manual input"""
+    folders = find_raw_data_folders()
+    
+    if not folders:
+        print("No raw data folders found under ./data/raw/")
+        print("Please provide the path to your raw data folder:")
+        while True:
+            path_str = input("Path: ").strip()
+            if not path_str:
+                continue
+            path = Path(path_str)
+            if path.exists() and path.is_dir():
+                return path
+            print(f"❌ Path does not exist or is not a directory: {path}")
     else:
-        for i, p in enumerate(options, 1):
-            print(f"  {i}) {p}")
-    print("  0) Enter a path manually")
+        print("Available raw data folders:")
+        for i, folder in enumerate(folders, 1):
+            print(f"  {i}. {folder.name}")
+        print(f"  {len(folders)+1}. Enter custom path")
 
     while True:
-        choice = input("Enter number (or 0 to type a path): ").strip()
-        if choice.isdigit():
-            idx = int(choice)
-            if idx == 0:
-                raw_path_str = input("Enter full or relative path to raw data folder: ").strip()
-                raw_path = Path(raw_path_str).expanduser().resolve()
-                if raw_path.exists() and raw_path.is_dir():
-                    return raw_path
-                print("Path not found or not a directory. Try again.\n")
+        try:
+            choice = input(f"Select folder (1-{len(folders)+1}): ").strip()
+            if not choice:
                 continue
-            if 1 <= idx <= len(options):
-                return options[idx - 1]
-        print("Invalid selection. Try again.\n")
+            
+            choice_num = int(choice)
+            if 1 <= choice_num <= len(folders):
+                return folders[choice_num - 1]
+            elif choice_num == len(folders) + 1:
+                # Custom path
+                path_str = input("Enter custom path: ").strip()
+                if path_str:
+                    path = Path(path_str)
+                    if path.exists() and path.is_dir():
+                        return path
+                    print(f"❌ Path does not exist or is not a directory: {path}")
+            else:
+                print(f"❌ Invalid choice. Please enter 1-{len(folders)+1}")
+        except ValueError:
+            print("❌ Please enter a valid number")
+        except KeyboardInterrupt:
+            print("\n👋 Goodbye!")
+            sys.exit(0)
 
 
 def main():
-    # Optional: allow non-interactive usage via --raw PATH
-    raw_arg = None
-    for i, a in enumerate(sys.argv):
-        if a == '--raw' and i + 1 < len(sys.argv):
-            raw_arg = Path(sys.argv[i + 1]).expanduser().resolve()
-        if a in ('-h', '--help'):
-            print("Usage: python scripts/e2e_predict.py [--raw /path/to/raw_data]")
-            return
-
-    if raw_arg is not None:
-        raw_folder = raw_arg
-        if not raw_folder.exists() or not raw_folder.is_dir():
-            print(f"Provided --raw path is invalid: {raw_folder}")
+    """Main entry point"""
+    parser = argparse.ArgumentParser(description="End-to-end prediction from raw data")
+    parser.add_argument("--raw", type=str, help="Path to raw data folder")
+    parser.add_argument("--out", type=str, help="Output CSV file path")
+    parser.add_argument("--bundle", type=str, default="models/final_np_iqrmid_u16n50_k2/bundle.json", 
+                       help="Path to model bundle")
+    
+    args = parser.parse_args()
+    
+    # Determine raw data folder
+    if args.raw:
+        raw_folder = Path(args.raw)
+        if not raw_folder.exists():
+            print(f"❌ Raw data folder does not exist: {raw_folder}")
             sys.exit(1)
     else:
-        raw_folder = pick_raw_folder_interactive()
-
-    # Point the ingestion to the selected raw folder without editing code:
-    # research_engine reads RAW_DATA_PATH env var from rag_system.config
-    os.environ['RAW_DATA_PATH'] = str(raw_folder)
-
-    # Pre-run: count raw session files
-    json_files = list(raw_folder.rglob('Coloring_*.json'))
-    print(f"\nFound {len(json_files)} Coloring_*.json files under: {raw_folder}")
-
-    # Build child-level features from raw JSONs (uses existing pipeline)
-    print("Building child-level features from raw data...")
-    try:
-        X_df, y_arr, child_ids = build_child_dataset()
-    except Exception as e:
-        print(f"Labeled feature build failed (falling back to unlabeled mode): {e}")
-        try:
-            X_df, child_ids = build_child_dataset_unlabeled(raw_folder)
-        except Exception as e2:
-            print(f"Unlabeled feature build failed: {e2}")
-            sys.exit(1)
-
-    # Post-build: report unique children aggregated
-    num_children = len(child_ids) if isinstance(child_ids, list) else 0
-    print(f"Aggregated {num_children} unique children.")
-
-    # Load the best model bundle (do not modify the model)
-    bundle_path = PROJ_ROOT / 'models' / 'final_np_iqrmid_u16n50_k2' / 'bundle.json'
+        raw_folder = interactive_folder_selection()
+    
+    print(f"📁 Using raw data folder: {raw_folder}")
+    
+    # Determine output file
+    if args.out:
+        output_file = Path(args.out)
+    else:
+        experiments_dir = PROJ_ROOT / 'data_experiments'
+        experiments_dir.mkdir(parents=True, exist_ok=True)
+        output_file = experiments_dir / f"{raw_folder.name}_results.csv"
+    
+    print(f"💾 Output will be saved to: {output_file}")
+    
+    # Load model bundle
+    bundle_path = Path(args.bundle)
     if not bundle_path.exists():
-        print(f"Best model bundle not found at {bundle_path}. Aborting.")
+        print(f"❌ Model bundle not found: {bundle_path}")
         sys.exit(1)
 
+    print(f"🤖 Loading model bundle: {bundle_path}")
     bundle, bundle_root = load_bundle(bundle_path)
-    feature_cols = bundle.get('feature_columns', [])
-    if not feature_cols:
-        print("Bundle missing 'feature_columns'. Aborting.")
-        sys.exit(1)
 
-    # Align columns to what the bundle expects
-    X_aligned = X_df.reindex(columns=feature_cols, fill_value=0).copy()
-
-    # Persist features for inspection and reproducibility
+    # Precompute feature file paths
     results_dir = PROJ_ROOT / 'results'
     results_dir.mkdir(parents=True, exist_ok=True)
-    raw_feat_csv = results_dir / f"{raw_folder.name}_features_raw.csv"
-    aligned_feat_csv = results_dir / f"{raw_folder.name}_features_aligned.csv"
+    raw_csv_path = results_dir / f"{raw_folder.name}_features_raw.csv"
+    aligned_csv_path = results_dir / f"{raw_folder.name}_features_aligned.csv"
+    
     try:
-        df_raw_save = X_df.copy()
-        df_raw_save.insert(0, 'child_id', child_ids)
-        df_raw_save.to_csv(raw_feat_csv, index=False)
-    except Exception:
-        pass
-    df_aligned_save = X_aligned.copy()
-    df_aligned_save.insert(0, 'child_id', child_ids)
-    df_aligned_save.to_csv(aligned_feat_csv, index=False)
-    print(f"Saved raw features: {raw_feat_csv}")
-    print(f"Saved aligned features: {aligned_feat_csv}")
+        # Try to build dataset with labels first (for validation)
+        print("🔍 Attempting to build dataset with labels...")
+        try:
+            X, y, child_ids = build_child_dataset()
+            print(f"✅ Built labeled dataset: {len(X)} samples")
+            has_labels = True
+        except Exception as e:
+            print(f"⚠️  Could not build labeled dataset: {e}")
+            print("🔄 Falling back to unlabeled dataset...")
+            has_labels = False
+        
+        aligned_for_inference: Path
+        
+        if aligned_csv_path.exists():
+            # Use existing aligned features exactly as-is to preserve prior outputs
+            print(f"📄 Using existing aligned features: {aligned_csv_path}")
+            aligned_for_inference = aligned_csv_path
+            # Do not regenerate raw/aligned to avoid drift
+            y = None if not has_labels else y
+        else:
+            # Build unlabeled dataset and write raw + aligned features
+            X, child_ids = build_child_dataset_unlabeled(raw_folder)[:2]
+            _, _, raw_features_df = build_child_dataset_unlabeled(raw_folder)
+            # Write raw features
+            # Ensure child_id column present in raw
+            if 'child_id' not in raw_features_df.columns:
+                raw_features_df.insert(0, 'child_id', child_ids)
+            raw_features_df.to_csv(raw_csv_path, index=False)
+            
+            # Align features to bundle schema
+            aligned_df = raw_features_df.copy()
+            # Drop child_id for alignment
+            aligned_no_id = aligned_df.drop(columns=['child_id'])
+            expected = bundle['feature_columns']
+            # Add missing with zeros
+            for col in expected:
+                if col not in aligned_no_id.columns:
+                    aligned_no_id[col] = 0
+            # Drop extras
+            extra = [c for c in aligned_no_id.columns if c not in expected]
+            if extra:
+                aligned_no_id = aligned_no_id.drop(columns=extra)
+            # Reorder
+            aligned_no_id = aligned_no_id[expected]
+            # Reattach child_id
+            aligned_final = pd.concat([aligned_df[['child_id']], aligned_no_id], axis=1)
+            aligned_final.to_csv(aligned_csv_path, index=False)
+            aligned_for_inference = aligned_csv_path
+            y = None
+        
+        # Make predictions via isolated subprocess using aligned features
+        print("🔮 Making predictions...")
+        temp_predictions_csv = Path("temp_predictions.csv")
+        try:
+            # Prepare environment for subprocess
+            env = os.environ.copy()
+            env.setdefault('OMP_NUM_THREADS', '1')
+            env.setdefault('OMP_MAX_ACTIVE_LEVELS', '1')
+            env.setdefault('OPENBLAS_NUM_THREADS', '1')
+            env.setdefault('MKL_NUM_THREADS', '1')
+            env.setdefault('VECLIB_MAXIMUM_THREADS', '1')
+            env.setdefault('NUMEXPR_NUM_THREADS', '1')
 
-    # Run predictions using the existing predict() from predict_cli
-    print("Running predictions with the best model bundle...")
+            python_exe = sys.executable
+            cmd = [
+                python_exe,
+                str(PROJ_ROOT / 'scripts' / 'predict_cli.py'),
+                '--bundle', str(bundle_path),
+                '--in', str(aligned_for_inference),
+                '--out', str(temp_predictions_csv)
+            ]
+            result = subprocess.run(cmd, env=env, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(result.stdout)
+                print(result.stderr)
+                raise RuntimeError(f"predict_cli failed with code {result.returncode}")
 
-    # predict() expects a CSV path; use the aligned features we just saved
-    bundle, bundle_root = load_bundle(bundle_path)
-    out_df = predict(bundle, bundle_root, aligned_feat_csv)
+            # Load predictions and write final CSV in prior format
+            pred_full = pd.read_csv(temp_predictions_csv)
+            cols = [c for c in ['child_id', 'prob_asd', 'pred_label'] if c in pred_full.columns]
+            if len(cols) < 3:
+                raise RuntimeError("Prediction output missing required columns 'child_id', 'prob_asd', 'pred_label'")
+            final_df = pred_full[['child_id', 'prob_asd', 'pred_label']]
+        finally:
+            if temp_predictions_csv.exists():
+                try:
+                    temp_predictions_csv.unlink()
+                except Exception:
+                    pass
+        
+        # Save results (exact prior format)
+        final_df.to_csv(output_file, index=False)
+        print(f"✅ Results saved to: {output_file}")
+        
+        # Print summary
+        print(f"\n📊 Summary:")
+        print(f"  - Samples processed: {len(final_df)}")
+        print(f"  - Predictions made: {len(final_df)}")
+        
+    except Exception as e:
+        print(f"❌ Error during processing: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
-    # Keep production-ready columns when available
-    cols = list(out_df.columns)
-    id_col = 'child_id' if 'child_id' in cols else (cols[0] if cols else None)
-    core_cols = [c for c in ['prob_asd', 'pred_label'] if c in cols]
-    if id_col and core_cols:
-        out_df = out_df[[id_col] + core_cols]
 
-    # Name output file
-    out_name = f"{raw_folder.name}_results.csv"
-    out_path = PROJ_ROOT / out_name
-    out_df.to_csv(out_path, index=False)
-
-    print(f"\nSaved predictions to {out_path}")
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
-
