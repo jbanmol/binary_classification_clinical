@@ -1,0 +1,122 @@
+{
+  "evaluation_timestamp": "2025-09-07T22:53:46.962656",
+  "clinical_targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.71
+  },
+  "validation_method": "ultimate_child_level_group_kfold",
+  "optimal_threshold": 0.3766052559596161,
+  "threshold_method": "ultimate_dual_optimization",
+  "base_v42_models": [
+    "v42_extratrees",
+    "v42_randomforest",
+    "v42_xgboost",
+    "v42_logistic"
+  ],
+  "sensitivity_boosters": [
+    "ultra_sensitive_et",
+    "ultra_sensitive_xgb",
+    "clinical_sensitivity_mlp",
+    "adaptive_sensitivity_ada"
+  ],
+  "feature_selection_k": 53,
+  "n_folds": 5,
+  "aggregated_results": {
+    "v42_extratrees": {
+      "sensitivity_mean": 0.7603665516144036,
+      "sensitivity_std": 0.05976025207422361,
+      "specificity_mean": 0.6299699966363607,
+      "specificity_std": 0.025895938744064966,
+      "accuracy_mean": 0.7023320709587404,
+      "accuracy_std": 0.034479325036641244,
+      "auc_mean": 0.7631590549940265,
+      "auc_std": 0.04138871515208055,
+      "clinical_safety_mean": 0.7212475851209906,
+      "clinical_safety_std": 0.04648435890623316
+    },
+    "v42_randomforest": {
+      "sensitivity_mean": 0.735758047538616,
+      "sensitivity_std": 0.032999809172614906,
+      "specificity_mean": 0.7019113869148484,
+      "specificity_std": 0.04464808579139314,
+      "accuracy_mean": 0.7219453856886584,
+      "accuracy_std": 0.031316939012036374,
+      "auc_mean": 0.7541896035795056,
+      "auc_std": 0.039751680243754355,
+      "clinical_safety_mean": 0.7256040493514857,
+      "clinical_safety_std": 0.03206230333914527
+    },
+    "v42_xgboost": {
+      "sensitivity_mean": 0.7629603192088321,
+      "sensitivity_std": 0.0421969606165387,
+      "specificity_mean": 0.5866308988458323,
+      "specificity_std": 0.010221262081990305,
+      "accuracy_mean": 0.6850840475715898,
+      "accuracy_std": 0.018698958314811644,
+      "auc_mean": 0.752076398882205,
+      "auc_std": 0.03714722466490106,
+      "clinical_safety_mean": 0.710061493099932,
+      "clinical_safety_std": 0.03020331874489776
+    },
+    "ultra_sensitive_et": {
+      "sensitivity_mean": 0.7304505152872635,
+      "sensitivity_std": 0.06789283724179034,
+      "specificity_mean": 0.6344600140773149,
+      "specificity_std": 0.02780227955496535,
+      "accuracy_mean": 0.6861869643213075,
+      "accuracy_std": 0.03471390316351341,
+      "auc_mean": 0.7491811774555777,
+      "auc_std": 0.04218071671967053,
+      "clinical_safety_mean": 0.7016533649242789,
+      "clinical_safety_std": 0.04708846549216651
+    },
+    "ultra_sensitive_xgb": {
+      "sensitivity_mean": 0.8345892634207243,
+      "sensitivity_std": 0.03926337396216962,
+      "specificity_mean": 0.42614797319215614,
+      "specificity_std": 0.06507259813298531,
+      "accuracy_mean": 0.6551591256394924,
+      "accuracy_std": 0.021284521704698384,
+      "auc_mean": 0.7503972345008789,
+      "auc_std": 0.03233838605512933,
+      "clinical_safety_mean": 0.7120568763521536,
+      "clinical_safety_std": 0.026322971323651845
+    },
+    "clinical_sensitivity_mlp": {
+      "sensitivity_mean": 0.7155845878925853,
+      "sensitivity_std": 0.05595555395450717,
+      "specificity_mean": 0.6497949460435415,
+      "specificity_std": 0.06414672294845127,
+      "accuracy_mean": 0.6850441831107569,
+      "accuracy_std": 0.03847994618313914,
+      "auc_mean": 0.7351160294877669,
+      "auc_std": 0.044886928960495724,
+      "clinical_safety_mean": 0.695847695337872,
+      "clinical_safety_std": 0.04343016249094293
+    },
+    "v42_logistic": {
+      "sensitivity_mean": 0.7856698734425105,
+      "sensitivity_std": 0.07154711876248533,
+      "specificity_mean": 0.5999215304638009,
+      "specificity_std": 0.04617041367037496,
+      "accuracy_mean": 0.7023586472659623,
+      "accuracy_std": 0.03710706843510405,
+      "auc_mean": 0.7598852363580963,
+      "auc_std": 0.05086247902865996,
+      "clinical_safety_mean": 0.7299453705488976,
+      "clinical_safety_std": 0.051063775313257335
+    },
+    "ULTIMATE_ENSEMBLE": {
+      "sensitivity_mean": 0.8638307507772147,
+      "sensitivity_std": 0.04734487929500033,
+      "specificity_mean": 0.39781905590862476,
+      "specificity_std": 0.05842283597113415,
+      "accuracy_mean": 0.6586140455783669,
+      "accuracy_std": 0.016393586008481873,
+      "auc_mean": 0.7654610021917698,
+      "auc_std": 0.039881685128747506,
+      "clinical_safety_mean": 0.7240272423166376,
+      "clinical_safety_std": 0.0268992182835891
+    }
+  }
+}

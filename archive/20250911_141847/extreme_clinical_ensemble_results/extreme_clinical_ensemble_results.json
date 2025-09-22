@@ -1,0 +1,171 @@
+{
+  "evaluation_timestamp": "2025-09-08T00:34:43.930294",
+  "clinical_targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.71
+  },
+  "ensemble_strategy": "extreme_multi_strategy_ensemble",
+  "extreme_techniques": [
+    "ultra_sensitive_models",
+    "bayesian_threshold_optimization",
+    "extreme_clinical_weighting",
+    "stacked_ensemble",
+    "ensemble_of_ensembles"
+  ],
+  "summary": {
+    "sensitivity_mean": 0.979683092213165,
+    "sensitivity_std": 0.006059590366360194,
+    "specificity_mean": 0.09318532364043139,
+    "specificity_std": 0.009575685727800525,
+    "accuracy_mean": 0.5929506345093349,
+    "accuracy_std": 0.04047746958346215,
+    "clinical_safety_mean": 0.8023835384986183,
+    "clinical_safety_std": 0.006135048339976031,
+    "sens_target_rate": 1.0,
+    "spec_target_rate": 0.0,
+    "both_targets_rate": 0.0,
+    "n_folds": 5
+  },
+  "fold_details": [
+    {
+      "fold": 1,
+      "threshold": 0.4342666015289408,
+      "metrics": {
+        "sensitivity": 0.9887640449438202,
+        "specificity": 0.09411764705882353,
+        "accuracy": 0.5517241379310345,
+        "precision": 0.5333333333333333,
+        "f1_score": 0.6929133858267716,
+        "clinical_safety": 0.8098347653668209,
+        "sens_target_met": "True",
+        "spec_target_met": "False",
+        "both_targets_met": "False",
+        "tp": "88",
+        "fp": "77",
+        "tn": "8",
+        "fn": "1",
+        "auc_roc": 0.8206212822207534,
+        "auc_pr": 0.8320671269954018
+      },
+      "n_models": 11,
+      "ensemble_strategies": [
+        "bayesian_thresholds",
+        "extreme_weighting",
+        "stacking",
+        "ensemble_of_ensembles"
+      ]
+    },
+    {
+      "fold": 2,
+      "threshold": 0.3936948544464906,
+      "metrics": {
+        "sensitivity": 0.9777777777777777,
+        "specificity": 0.08333333333333333,
+        "accuracy": 0.5459770114942529,
+        "precision": 0.5333333333333333,
+        "f1_score": 0.6901960784313725,
+        "clinical_safety": 0.798888888888889,
+        "sens_target_met": "True",
+        "spec_target_met": "False",
+        "both_targets_met": "False",
+        "tp": "88",
+        "fp": "77",
+        "tn": "7",
+        "fn": "2",
+        "auc_roc": 0.7927248677248677,
+        "auc_pr": 0.7581712376184162
+      },
+      "n_models": 11,
+      "ensemble_strategies": [
+        "bayesian_thresholds",
+        "extreme_weighting",
+        "stacking",
+        "ensemble_of_ensembles"
+      ]
+    },
+    {
+      "fold": 3,
+      "threshold": 0.4426817895823182,
+      "metrics": {
+        "sensitivity": 0.9803921568627451,
+        "specificity": 0.09859154929577464,
+        "accuracy": 0.6184971098265896,
+        "precision": 0.6097560975609756,
+        "f1_score": 0.7518796992481203,
+        "clinical_safety": 0.804032035349351,
+        "sens_target_met": "True",
+        "spec_target_met": "False",
+        "both_targets_met": "False",
+        "tp": "100",
+        "fp": "64",
+        "tn": "7",
+        "fn": "2",
+        "auc_roc": 0.7263186964926814,
+        "auc_pr": 0.7565045140749973
+      },
+      "n_models": 11,
+      "ensemble_strategies": [
+        "bayesian_thresholds",
+        "extreme_weighting",
+        "stacking",
+        "ensemble_of_ensembles"
+      ]
+    },
+    {
+      "fold": 4,
+      "threshold": 0.49831107987741824,
+      "metrics": {
+        "sensitivity": 0.9814814814814815,
+        "specificity": 0.1076923076923077,
+        "accuracy": 0.653179190751445,
+        "precision": 0.6463414634146342,
+        "f1_score": 0.7794117647058825,
+        "clinical_safety": 0.8067236467236467,
+        "sens_target_met": "True",
+        "spec_target_met": "False",
+        "both_targets_met": "False",
+        "tp": "106",
+        "fp": "58",
+        "tn": "7",
+        "fn": "2",
+        "auc_roc": 0.7121082621082621,
+        "auc_pr": 0.816898094050958
+      },
+      "n_models": 11,
+      "ensemble_strategies": [
+        "bayesian_thresholds",
+        "extreme_weighting",
+        "stacking",
+        "ensemble_of_ensembles"
+      ]
+    },
+    {
+      "fold": 5,
+      "threshold": 0.4049827843114373,
+      "metrics": {
+        "sensitivity": 0.97,
+        "specificity": 0.0821917808219178,
+        "accuracy": 0.5953757225433526,
+        "precision": 0.5914634146341463,
+        "f1_score": 0.7348484848484849,
+        "clinical_safety": 0.7924383561643836,
+        "sens_target_met": "True",
+        "spec_target_met": "False",
+        "both_targets_met": "False",
+        "tp": "97",
+        "fp": "67",
+        "tn": "6",
+        "fn": "3",
+        "auc_roc": 0.7304109589041097,
+        "auc_pr": 0.7720406918776523
+      },
+      "n_models": 11,
+      "ensemble_strategies": [
+        "bayesian_thresholds",
+        "extreme_weighting",
+        "stacking",
+        "ensemble_of_ensembles"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+# Experiment configuration for Wave A and Wave B
+
+A:
+  common:
+    target_sens: 0.86
+    target_spec: 0.70
+    use_umap_cosine: true
+    umap_components: 16
+    umap_neighbors: 50
+    calibration: isotonic
+    models: lgbm_grid,xgb_grid,brf,extratrees
+    top_k_models: 2
+    report_holdout_specfirst: true
+  seeds: [17, 29, 43, 101, 777]
+  grid:
+    threshold_policy: [spec_first, np, both_targets]
+    final_calibration: [none, isotonic, sigmoid, temperature]
+    threshold_transfer: [median, iqr_mid, quantile_map]
+    quantile_guard_ks: [0.0, 0.15]
+
+B:
+  common:
+    target_sens: 0.86
+    target_spec: 0.70
+    use_umap_cosine: true
+    calibration: isotonic
+    models: lgbm_grid,xgb_grid,brf,extratrees
+    report_holdout_specfirst: true
+    threshold_policy: np
+    threshold_transfer: iqr_mid
+    final_calibration: temperature
+  seeds: [17, 29, 101]
+  grid:
+    umap_components: [12, 16, 20]
+    umap_neighbors: [30, 50, 80]
+    top_k_models: [2, 3]
+    # combiner choice is implicit in pipeline: we evaluate alpha and meta; select the better one per CV
+
+CUSTOM:
+  common:
+    target_sens: 0.86
+    target_spec: 0.70
+    use_umap_cosine: true
+    calibration: isotonic
+    models: lgbm_grid,xgb_grid,brf,extratrees
+  seeds: [42]
+  grid:
+    threshold_policy: [both_targets]
+    threshold_transfer: [median]
+    top_k_models: [2]
+

@@ -1,0 +1,27 @@
+{
+  "motor_control": [
+    "stroke_velocity_mean",
+    "stroke_velocity_std",
+    "stroke_acceleration_std",
+    "stroke_direction_changes",
+    "stroke_smoothness_sal",
+    "stroke_straightness"
+  ],
+  "planning": [
+    "zone_transition_rate",
+    "color_switch_rate",
+    "progress_linearity",
+    "out_of_bounds_ratio"
+  ],
+  "tremor": [
+    "stroke_acc_mag_tremor_ratio",
+    "stroke_acc_z_power_high",
+    "stroke_acc_mag_std"
+  ],
+  "attention": [
+    "session_duration",
+    "final_completion",
+    "inter_stroke_interval_std",
+    "num_strokes"
+  ]
+}

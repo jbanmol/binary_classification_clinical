@@ -1,0 +1,60 @@
+{
+  "data_summary": {
+    "total_sessions": 823,
+    "unique_children": 270,
+    "label_distribution": {
+      "ASD": 489,
+      "TD": 334
+    },
+    "sessions_per_child": {
+      "count": 270.0,
+      "mean": 3.0481481481481483,
+      "std": 0.5328400238173631,
+      "min": 1.0,
+      "25%": 3.0,
+      "50%": 3.0,
+      "75%": 3.0,
+      "max": 7.0
+    }
+  },
+  "validation_results": {
+    "total_sessions": 823,
+    "unique_children": 270,
+    "label_distribution": {
+      "ASD": 489,
+      "TD": 334
+    },
+    "child_label_distribution": {
+      "ASD": 160,
+      "TD": 110
+    },
+    "missing_data_summary": {
+      "child_id": 0,
+      "session_timestamp": 0,
+      "binary_label": 0,
+      "stroke_count": 0,
+      "total_touch_points": 0,
+      "unique_zones": 0,
+      "unique_colors": 0,
+      "zone_distribution": 0,
+      "color_distribution": 0,
+      "session_duration": 0,
+      "avg_time_between_points": 0,
+      "velocity_mean": 0,
+      "velocity_std": 0,
+      "velocity_max": 0,
+      "velocity_cv": 0,
+      "max_finger_id": 0,
+      "unique_fingers": 0,
+      "canceled_touches": 0,
+      "palm_touch_ratio": 0,
+      "acc_magnitude_mean": 0,
+      "acc_magnitude_std": 0,
+      "tremor_indicator": 0,
+      "final_completion": 0,
+      "completion_progress_rate": 0
+    },
+    "data_quality_score": 100.0
+  },
+  "status": "completed"
+}

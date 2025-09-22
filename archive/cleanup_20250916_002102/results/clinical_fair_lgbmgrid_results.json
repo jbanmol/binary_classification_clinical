@@ -1,0 +1,82 @@
+{
+  "policy": "clinical-both-targets",
+  "targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.7
+  },
+  "models": [
+    "lgbm_mc20_ff0.6_spw0.75",
+    "lgbm_mc20_ff0.6_spw1.0",
+    "lgbm_mc20_ff0.6_spw1.25",
+    "lgbm_mc20_ff0.8_spw0.75",
+    "lgbm_mc20_ff0.8_spw1.0",
+    "lgbm_mc20_ff0.8_spw1.25",
+    "lgbm_mc40_ff0.6_spw0.75",
+    "lgbm_mc40_ff0.6_spw1.0",
+    "lgbm_mc40_ff0.6_spw1.25",
+    "lgbm_mc40_ff0.8_spw0.75",
+    "lgbm_mc40_ff0.8_spw1.0",
+    "lgbm_mc40_ff0.8_spw1.25",
+    "lgbm_mc60_ff0.6_spw0.75",
+    "lgbm_mc60_ff0.6_spw1.0",
+    "lgbm_mc60_ff0.6_spw1.25",
+    "lgbm_mc60_ff0.8_spw0.75",
+    "lgbm_mc60_ff0.8_spw1.0",
+    "lgbm_mc60_ff0.8_spw1.25",
+    "extratrees",
+    "brf",
+    "logreg"
+  ],
+  "use_polynomial": true,
+  "calibration": "isotonic",
+  "cv": {
+    "folds": [
+      {
+        "fold": 1,
+        "threshold": 0.4622651418407867,
+        "sensitivity": 0.8888888888888888,
+        "specificity": 0.7058823529411764,
+        "auc": 0.8997821350762527
+      },
+      {
+        "fold": 2,
+        "threshold": 0.47411684388426845,
+        "sensitivity": 0.8846153846153846,
+        "specificity": 0.7058823529411764,
+        "auc": 0.8823529411764707
+      },
+      {
+        "fold": 3,
+        "threshold": 0.5728267754285828,
+        "sensitivity": 0.8260869565217391,
+        "specificity": 0.7,
+        "auc": 0.7673913043478261
+      },
+      {
+        "fold": 4,
+        "threshold": 0.5094327414150056,
+        "sensitivity": 0.875,
+        "specificity": 0.7894736842105263,
+        "auc": 0.9320175438596491
+      },
+      {
+        "fold": 5,
+        "threshold": 0.6956867779705529,
+        "sensitivity": 0.5185185185185185,
+        "specificity": 0.75,
+        "auc": 0.6643518518518519
+      }
+    ],
+    "threshold_median": 0.5094327414150056,
+    "sensitivity_mean": 0.7986219497089062,
+    "specificity_mean": 0.7302476780185758,
+    "auc_mean": 0.8291791552624102
+  },
+  "holdout": {
+    "sensitivity": 0.8181818181818182,
+    "specificity": 0.5714285714285714,
+    "auc": 0.8297258297258296,
+    "threshold": 0.5094327414150056,
+    "meets_targets": false
+  }
+}

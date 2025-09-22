@@ -1,0 +1,21 @@
+Top 25 features (feature, type, combined_importance)
+target_zone_coverage_mean, raw, 0.436272
+inter_stroke_cv_min, raw, 0.205890
+velocity_mean_session_max_min, raw, 0.199486
+zone_transition_rate_mean, raw, 0.183220
+color_switches_mean, raw, 0.164291
+rep_umap_z7, representation, 0.103800
+progress_linearity_max, raw, 0.100381
+rep_umap_z16, representation, 0.095289
+rep_umap_z3, representation, 0.087138
+jerk_score_session_max_min, raw, 0.081489
+zone_transition_rate_std, raw, 0.075604
+zone_transition_rate_mean_log, engineered, 0.073176
+jerk_score_session_std_mean, raw, 0.072223
+progress_linearity_max_log, engineered, 0.068444
+velocity_std_session_max_min, raw, 0.050271
+velocity_mean_session_max_mean, raw, 0.031738
+velocity_mean_session_std_mean, raw, 0.028158
+total_area_covered_max, raw, 0.021914
+total_area_covered_max_log, engineered, 0.010579
+velocity_mean_session_max_mean_log, engineered, 0.000000

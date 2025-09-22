@@ -1,0 +1,12 @@
+{
+  "tpot_minutes": 20,
+  "use_polynomial": true,
+  "pipeline": "Pipeline(steps=[('standardscaler', StandardScaler()),\n                ('variancethreshold',\n                 VarianceThreshold(threshold=0.0001494777225)),\n                ('featureunion-1',\n                 FeatureUnion(transformer_list=[('skiptransformer',\n                                                 SkipTransformer()),\n                                                ('passthrough',\n                                                 Passthrough())])),\n                ('featureunion-2',\n                 FeatureUnion(transformer_list=[('skiptransformer',\n                                                 SkipTransformer()),\n                                                ('passthrough',\n                                                 Passthrough())])),\n                ('randomforestclassifier',\n                 RandomForestClassifier(bootstrap=False, criterion='entropy',\n                                        max_features=0.0243610026523,\n                                        min_samples_leaf=6, min_samples_split=8,\n                                        n_estimators=128, n_jobs=1,\n                                        random_state=42))])",
+  "holdout": {
+    "sensitivity": 0.7878787878787878,
+    "specificity": 0.7142857142857143,
+    "auc": 0.7886002886002887,
+    "threshold": 0.5908621821934515,
+    "meets_targets": false
+  }
+}

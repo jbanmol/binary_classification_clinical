@@ -1,0 +1,35 @@
+{
+  "pattern": "results/waveA_s*_ho777_*_u16n50_k2.json",
+  "files": [
+    "results/waveA_s17_ho777_tpnp_ttiqr_mid_fcisotonic_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpnp_ttiqr_mid_fctemperature_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpnp_ttquantile_map_fcisotonic_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpnp_ttquantile_map_fctemperature_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpspec_first_ttiqr_mid_fcisotonic_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpspec_first_ttiqr_mid_fctemperature_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpspec_first_ttquantile_map_fcisotonic_u16n50_k2.json",
+    "results/waveA_s17_ho777_tpspec_first_ttquantile_map_fctemperature_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpnp_ttiqr_mid_fcisotonic_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpnp_ttiqr_mid_fctemperature_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpnp_ttquantile_map_fcisotonic_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpnp_ttquantile_map_fctemperature_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpspec_first_ttiqr_mid_fcisotonic_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpspec_first_ttiqr_mid_fctemperature_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpspec_first_ttquantile_map_fcisotonic_u16n50_k2.json",
+    "results/waveA_s29_ho777_tpspec_first_ttquantile_map_fctemperature_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpnp_ttiqr_mid_fcisotonic_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpnp_ttiqr_mid_fctemperature_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpnp_ttquantile_map_fcisotonic_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpnp_ttquantile_map_fctemperature_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpspec_first_ttiqr_mid_fcisotonic_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpspec_first_ttiqr_mid_fctemperature_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpspec_first_ttquantile_map_fcisotonic_u16n50_k2.json",
+    "results/waveA_s43_ho777_tpspec_first_ttquantile_map_fctemperature_u16n50_k2.json"
+  ],
+  "bagged_metrics": {
+    "threshold": 0.5556274201706946,
+    "sensitivity": 0.8823529411764706,
+    "specificity": 0.9,
+    "auc": 0.9117647058823529
+  }
+}

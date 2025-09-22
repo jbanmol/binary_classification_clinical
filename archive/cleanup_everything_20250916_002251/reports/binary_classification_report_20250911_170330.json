@@ -1,0 +1,157 @@
+{
+  "project_info": {
+    "name": "ASD vs TD Binary Classification",
+    "description": "Coloring game behavioral analysis for autism classification",
+    "generated_at": "2025-09-11T17:03:30.501836",
+    "completed_phases": [
+      "data_preparation",
+      "feature_engineering",
+      "exploratory_analysis"
+    ]
+  },
+  "data_summary": {
+    "total_sessions": 823,
+    "unique_children": 270,
+    "label_distribution": {
+      "ASD": 489,
+      "TD": 334
+    },
+    "sessions_per_child": {
+      "count": 270.0,
+      "mean": 3.0481481481481483,
+      "std": 0.5328400238173631,
+      "min": 1.0,
+      "25%": 3.0,
+      "50%": 3.0,
+      "75%": 3.0,
+      "max": 7.0
+    }
+  },
+  "feature_analysis": {
+    "total_features_available": 19,
+    "recommended_features": {
+      "session_duration": {
+        "asd_mean": 84.12511344955008,
+        "td_mean": 100.6847116745509,
+        "effect_size": 0.4849494215907628,
+        "recommendation": "Weak"
+      },
+      "velocity_mean": {
+        "asd_mean": 1662.193043477641,
+        "td_mean": 1133.7603867176913,
+        "effect_size": 0.7163811634008647,
+        "recommendation": "Moderate"
+      },
+      "velocity_std": {
+        "asd_mean": 1749.6261378567092,
+        "td_mean": 1116.3629825001187,
+        "effect_size": 0.8473092582200402,
+        "recommendation": "Strong"
+      },
+      "unique_fingers": {
+        "asd_mean": 4.1656441717791415,
+        "td_mean": 3.356287425149701,
+        "effect_size": 0.1837029325235632,
+        "recommendation": "Weak"
+      },
+      "palm_touch_ratio": {
+        "asd_mean": 0.008956806183979454,
+        "td_mean": 0.002394034978642228,
+        "effect_size": 0.5612795988184229,
+        "recommendation": "Moderate"
+      },
+      "tremor_indicator": {
+        "asd_mean": 0.025948178120015205,
+        "td_mean": 0.017156013299282014,
+        "effect_size": 0.28702574431683947,
+        "recommendation": "Weak"
+      },
+      "final_completion": {
+        "asd_mean": 86.29343171489776,
+        "td_mean": 93.99421556137723,
+        "effect_size": 0.45222620633607835,
+        "recommendation": "Weak"
+      }
+    },
+    "feature_importance_analysis": {},
+    "data_quality_report": {}
+  },
+  "model_performance": {},
+  "project_state": {
+    "current_phase": "results_reporting",
+    "completed_phases": [
+      "data_preparation",
+      "feature_engineering",
+      "exploratory_analysis"
+    ],
+    "data_summary": {
+      "total_sessions": 823,
+      "unique_children": 270,
+      "label_distribution": {
+        "ASD": 489,
+        "TD": 334
+      },
+      "sessions_per_child": {
+        "count": 270.0,
+        "mean": 3.0481481481481483,
+        "std": 0.5328400238173631,
+        "min": 1.0,
+        "25%": 3.0,
+        "50%": 3.0,
+        "75%": 3.0,
+        "max": 7.0
+      }
+    },
+    "feature_recommendations": {
+      "total_features_available": 19,
+      "recommended_features": {
+        "session_duration": {
+          "asd_mean": 84.12511344955008,
+          "td_mean": 100.6847116745509,
+          "effect_size": 0.4849494215907628,
+          "recommendation": "Weak"
+        },
+        "velocity_mean": {
+          "asd_mean": 1662.193043477641,
+          "td_mean": 1133.7603867176913,
+          "effect_size": 0.7163811634008647,
+          "recommendation": "Moderate"
+        },
+        "velocity_std": {
+          "asd_mean": 1749.6261378567092,
+          "td_mean": 1116.3629825001187,
+          "effect_size": 0.8473092582200402,
+          "recommendation": "Strong"
+        },
+        "unique_fingers": {
+          "asd_mean": 4.1656441717791415,
+          "td_mean": 3.356287425149701,
+          "effect_size": 0.1837029325235632,
+          "recommendation": "Weak"
+        },
+        "palm_touch_ratio": {
+          "asd_mean": 0.008956806183979454,
+          "td_mean": 0.002394034978642228,
+          "effect_size": 0.5612795988184229,
+          "recommendation": "Moderate"
+        },
+        "tremor_indicator": {
+          "asd_mean": 0.025948178120015205,
+          "td_mean": 0.017156013299282014,
+          "effect_size": 0.28702574431683947,
+          "recommendation": "Weak"
+        },
+        "final_completion": {
+          "asd_mean": 86.29343171489776,
+          "td_mean": 93.99421556137723,
+          "effect_size": 0.45222620633607835,
+          "recommendation": "Weak"
+        }
+      },
+      "feature_importance_analysis": {},
+      "data_quality_report": {}
+    },
+    "model_results": {},
+    "deployment_status": "not_deployed"
+  }
+}

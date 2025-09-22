@@ -1,0 +1,108 @@
+{
+  "evaluation_timestamp": "2025-09-07T22:35:27.233423",
+  "clinical_targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.71
+  },
+  "validation_method": "ultra_aggressive_child_level_group_kfold",
+  "strategy": "cascaded_ensemble_optimization",
+  "n_folds": 5,
+  "aggregated_results": {
+    "ultra_et": {
+      "sensitivity_mean": 0.6647637511933613,
+      "sensitivity_std": 0.040298906487214965,
+      "specificity_mean": 0.7736088403808665,
+      "specificity_std": 0.04436911941302376,
+      "accuracy_mean": 0.7126968307753637,
+      "accuracy_std": 0.04449810410280627,
+      "auc_mean": 0.7516128053969597,
+      "auc_std": 0.03523858454079974,
+      "clinical_safety_mean": 0.6974172779496127,
+      "clinical_safety_std": 0.03951498882075245
+    },
+    "ultra_lr": {
+      "sensitivity_mean": 0.982310543193557,
+      "sensitivity_std": 0.014314908274181536,
+      "specificity_mean": 0.05000100023683912,
+      "specificity_std": 0.027058789875304964,
+      "accuracy_mean": 0.5745199654508006,
+      "accuracy_std": 0.04627204506189959,
+      "auc_mean": 0.7555225287754392,
+      "auc_std": 0.03874722369024107,
+      "clinical_safety_mean": 0.7026176803065417,
+      "clinical_safety_std": 0.009491796722056701
+    },
+    "ultra_xgb": {
+      "sensitivity_mean": 0.7812075102200682,
+      "sensitivity_std": 0.04001976840739119,
+      "specificity_mean": 0.5275273197481548,
+      "specificity_std": 0.01772627745784189,
+      "accuracy_mean": 0.6700883662215136,
+      "accuracy_std": 0.016784363559732608,
+      "auc_mean": 0.7472767051461423,
+      "auc_std": 0.034562785381912826,
+      "clinical_safety_mean": 0.7051034530784941,
+      "clinical_safety_std": 0.030285713945469334
+    },
+    "ultra_lgb": {
+      "sensitivity_mean": 0.7621890773787668,
+      "sensitivity_std": 0.029437461066859915,
+      "specificity_mean": 0.5940833654585628,
+      "specificity_std": 0.020253336203153144,
+      "accuracy_mean": 0.6885522556640754,
+      "accuracy_std": 0.01599635691749836,
+      "auc_mean": 0.7389491870758775,
+      "auc_std": 0.03387930460396767,
+      "clinical_safety_mean": 0.7117573638027055,
+      "clinical_safety_std": 0.023257423504100403
+    },
+    "balanced_rf": {
+      "sensitivity_mean": 0.782317789038212,
+      "sensitivity_std": 0.037112980987319986,
+      "specificity_mean": 0.5775879833225682,
+      "specificity_std": 0.052255140374508076,
+      "accuracy_mean": 0.6943060261776626,
+      "accuracy_std": 0.026985529548769992,
+      "auc_mean": 0.7561393313834371,
+      "auc_std": 0.03105499138076745,
+      "clinical_safety_mean": 0.7208988473235187,
+      "clinical_safety_std": 0.03437808532022571
+    },
+    "balanced_gb": {
+      "sensitivity_mean": 0.7240345646373406,
+      "sensitivity_std": 0.03577202823728977,
+      "specificity_mean": 0.6735259629015232,
+      "specificity_std": 0.039821852899680495,
+      "accuracy_mean": 0.7023254268819348,
+      "accuracy_std": 0.03511199161166772,
+      "auc_mean": 0.7437767622900732,
+      "auc_std": 0.03960955414964488,
+      "clinical_safety_mean": 0.7088819841165953,
+      "clinical_safety_std": 0.03648661320097029
+    },
+    "clinical_mlp": {
+      "sensitivity_mean": 0.7055750410026682,
+      "sensitivity_std": 0.032250363483043686,
+      "specificity_mean": 0.6007403835396935,
+      "specificity_std": 0.07329548277636437,
+      "accuracy_mean": 0.6596638097136404,
+      "accuracy_std": 0.03362705309281339,
+      "auc_mean": 0.7104083828733587,
+      "auc_std": 0.030566472609458058,
+      "clinical_safety_mean": 0.6741246437637758,
+      "clinical_safety_std": 0.03137123267017378
+    },
+    "ULTRA_ENSEMBLE": {
+      "sensitivity_mean": 0.861456708526107,
+      "sensitivity_std": 0.06989120737351545,
+      "specificity_mean": 0.5240334737614305,
+      "specificity_std": 0.1927891791315853,
+      "accuracy_mean": 0.7231346754368481,
+      "accuracy_std": 0.03218003164385661,
+      "auc_mean": 0.7615095047624153,
+      "auc_std": 0.03514877040496474,
+      "clinical_safety_mean": 0.7602297380967041,
+      "clinical_safety_std": 0.021790564491789254
+    }
+  }
+}

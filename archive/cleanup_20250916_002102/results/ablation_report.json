@@ -1,0 +1,82 @@
+{
+  "best_model": "LightGBM [spw=0.75]",
+  "target_sensitivity": 0.86,
+  "base": {
+    "cv": {
+      "cv_mean_auc": 0.6527777777777778,
+      "cv_std_auc": 0.0,
+      "cv_mean_sensitivity_asd": 0.8888888888888888,
+      "cv_std_sensitivity_asd": 0.0,
+      "cv_mean_specificity_asd": 0.3125,
+      "cv_std_specificity_asd": 0.0,
+      "cv_folds": [
+        {
+          "fold": 1,
+          "auc": 0.6527777777777778,
+          "threshold": 0.07682773479277527,
+          "sensitivity_asd": 0.8888888888888888,
+          "specificity_asd": 0.3125
+        }
+      ]
+    },
+    "holdout": {
+      "test_auc": 0.7994227994227995,
+      "threshold": 0.34475369210451445,
+      "sensitivity_asd": 0.8787878787878788,
+      "specificity_asd": 0.33333333333333337
+    }
+  },
+  "rag_aug": {
+    "cv": {
+      "cv_mean_auc": 0.8321259643523744,
+      "cv_std_auc": 0.08453044006927916,
+      "cv_mean_sensitivity_asd": 0.9061129691564475,
+      "cv_std_sensitivity_asd": 0.014425852503934106,
+      "cv_mean_specificity_asd": 0.6580650154798762,
+      "cv_std_specificity_asd": 0.20149375557386054,
+      "cv_folds": [
+        {
+          "fold": 1,
+          "auc": 0.8823529411764706,
+          "threshold": 0.27413214470119673,
+          "sensitivity_asd": 0.8888888888888888,
+          "specificity_asd": 0.5882352941176471
+        },
+        {
+          "fold": 2,
+          "auc": 0.9004524886877828,
+          "threshold": 0.40924293835812464,
+          "sensitivity_asd": 0.9230769230769231,
+          "specificity_asd": 0.8823529411764706
+        },
+        {
+          "fold": 3,
+          "auc": 0.7891304347826087,
+          "threshold": 0.23515910661183426,
+          "sensitivity_asd": 0.9130434782608695,
+          "specificity_asd": 0.55
+        },
+        {
+          "fold": 4,
+          "auc": 0.9035087719298246,
+          "threshold": 0.6590165325211088,
+          "sensitivity_asd": 0.9166666666666666,
+          "specificity_asd": 0.8947368421052632
+        },
+        {
+          "fold": 5,
+          "auc": 0.6851851851851852,
+          "threshold": 0.1359197104595825,
+          "sensitivity_asd": 0.8888888888888888,
+          "specificity_asd": 0.375
+        }
+      ]
+    },
+    "holdout": {
+      "test_auc": 0.7763347763347763,
+      "threshold": 0.30684186940486485,
+      "sensitivity_asd": 0.8787878787878788,
+      "specificity_asd": 0.2857142857142857
+    }
+  }
+}

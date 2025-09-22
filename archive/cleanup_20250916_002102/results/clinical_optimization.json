@@ -1,0 +1,1061 @@
+{
+  "target_sensitivity": 0.87,
+  "results": [
+    {
+      "rep": "umap_cosine",
+      "model": "LightGBM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.8152958152958153,
+          "threshold": 0.2891982463052595,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.6190476190476191
+        },
+        {
+          "fold": 2,
+          "auc": 0.7798295454545454,
+          "threshold": 0.0016313241035144223,
+          "sensitivity": 0.90625,
+          "specificity": 0.31818181818181823
+        },
+        {
+          "fold": 3,
+          "auc": 0.7893217893217893,
+          "threshold": 0.10129165341690573,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 4,
+          "auc": 0.9347222222222222,
+          "threshold": 0.5463664795436614,
+          "sensitivity": 0.9,
+          "specificity": 0.875
+        },
+        {
+          "fold": 5,
+          "auc": 0.8693181818181819,
+          "threshold": 0.34356272046126207,
+          "sensitivity": 0.875,
+          "specificity": 0.7727272727272727
+        }
+      ],
+      "mean_auc": 0.8376975108225109,
+      "mean_sensitivity": 0.8877651515151517,
+      "mean_specificity": 0.6122294372294371
+    },
+    {
+      "rep": "none",
+      "model": "LightGBM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.8225108225108225,
+          "threshold": 0.304180705029147,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.6190476190476191
+        },
+        {
+          "fold": 2,
+          "auc": 0.78125,
+          "threshold": 0.00153554543788404,
+          "sensitivity": 0.90625,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.8225108225108225,
+          "threshold": 0.1471486787863272,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.5714285714285714
+        },
+        {
+          "fold": 4,
+          "auc": 0.9069444444444446,
+          "threshold": 0.37321356922240423,
+          "sensitivity": 0.9,
+          "specificity": 0.625
+        },
+        {
+          "fold": 5,
+          "auc": 0.8607954545454546,
+          "threshold": 0.49994596135117125,
+          "sensitivity": 0.875,
+          "specificity": 0.7272727272727273
+        }
+      ],
+      "mean_auc": 0.8388023088023088,
+      "mean_sensitivity": 0.8938257575757576,
+      "mean_specificity": 0.5812770562770563
+    },
+    {
+      "rep": "none",
+      "model": "XGBoost",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.8181818181818183,
+          "threshold": 0.2797592580318451,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 2,
+          "auc": 0.8053977272727273,
+          "threshold": 0.055910807102918625,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.8528138528138529,
+          "threshold": 0.3341470956802368,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.6666666666666667
+        },
+        {
+          "fold": 4,
+          "auc": 0.9041666666666667,
+          "threshold": 0.47372743487358093,
+          "sensitivity": 0.9,
+          "specificity": 0.7083333333333333
+        },
+        {
+          "fold": 5,
+          "auc": 0.8650568181818182,
+          "threshold": 0.3659065365791321,
+          "sensitivity": 0.9375,
+          "specificity": 0.6818181818181819
+        }
+      ],
+      "mean_auc": 0.8491233766233768,
+      "mean_sensitivity": 0.8940151515151517,
+      "mean_specificity": 0.5698051948051948
+    },
+    {
+      "rep": "pca",
+      "model": "XGBoost",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.8066378066378066,
+          "threshold": 0.31210047006607056,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 2,
+          "auc": 0.8082386363636364,
+          "threshold": 0.06353507190942764,
+          "sensitivity": 0.875,
+          "specificity": 0.31818181818181823
+        },
+        {
+          "fold": 3,
+          "auc": 0.7734487734487735,
+          "threshold": 0.10423998534679413,
+          "sensitivity": 0.9393939393939394,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.9111111111111111,
+          "threshold": 0.4481842815876007,
+          "sensitivity": 0.9,
+          "specificity": 0.7916666666666666
+        },
+        {
+          "fold": 5,
+          "auc": 0.8792613636363636,
+          "threshold": 0.615567147731781,
+          "sensitivity": 0.90625,
+          "specificity": 0.8181818181818181
+        }
+      ],
+      "mean_auc": 0.8357395382395382,
+      "mean_sensitivity": 0.8998863636363638,
+      "mean_specificity": 0.5665584415584416
+    },
+    {
+      "rep": "umap",
+      "model": "SVM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7936507936507937,
+          "threshold": 0.3743218746691614,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.6666666666666667
+        },
+        {
+          "fold": 2,
+          "auc": 0.8153409090909091,
+          "threshold": 0.32097967206168426,
+          "sensitivity": 0.875,
+          "specificity": 0.31818181818181823
+        },
+        {
+          "fold": 3,
+          "auc": 0.7474747474747475,
+          "threshold": 0.308549688582746,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.8555555555555556,
+          "threshold": 0.5282874390780392,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.7083333333333333
+        },
+        {
+          "fold": 5,
+          "auc": 0.7784090909090909,
+          "threshold": 0.41656895357248785,
+          "sensitivity": 0.875,
+          "specificity": 0.5909090909090908
+        }
+      ],
+      "mean_auc": 0.7980862193362193,
+      "mean_sensitivity": 0.8942424242424243,
+      "mean_specificity": 0.5425324675324676
+    },
+    {
+      "rep": "umap_cosine",
+      "model": "XGBoost",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7994227994227994,
+          "threshold": 0.3128087818622589,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 2,
+          "auc": 0.8039772727272728,
+          "threshold": 0.03772664815187454,
+          "sensitivity": 0.90625,
+          "specificity": 0.31818181818181823
+        },
+        {
+          "fold": 3,
+          "auc": 0.7821067821067821,
+          "threshold": 0.2228524386882782,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 4,
+          "auc": 0.9055555555555554,
+          "threshold": 0.37800002098083496,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.6666666666666667
+        },
+        {
+          "fold": 5,
+          "auc": 0.8764204545454545,
+          "threshold": 0.44202446937561035,
+          "sensitivity": 0.90625,
+          "specificity": 0.7727272727272727
+        }
+      ],
+      "mean_auc": 0.8334965728715729,
+      "mean_sensitivity": 0.9006818181818183,
+      "mean_specificity": 0.541991341991342
+    },
+    {
+      "rep": "pca",
+      "model": "LightGBM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.8268398268398268,
+          "threshold": 0.2664948478961798,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 2,
+          "auc": 0.8039772727272728,
+          "threshold": 0.0013167942607640183,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7950937950937951,
+          "threshold": 0.009686348853571985,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.9027777777777778,
+          "threshold": 0.24285722158623557,
+          "sensitivity": 0.9,
+          "specificity": 0.7083333333333333
+        },
+        {
+          "fold": 5,
+          "auc": 0.8465909090909091,
+          "threshold": 0.3644082056964353,
+          "sensitivity": 0.875,
+          "specificity": 0.6818181818181819
+        }
+      ],
+      "mean_auc": 0.8350559163059164,
+      "mean_sensitivity": 0.8875757575757575,
+      "mean_specificity": 0.5412337662337663
+    },
+    {
+      "rep": "none",
+      "model": "SVM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7777777777777779,
+          "threshold": 0.29222294612086336,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 2,
+          "auc": 0.8295454545454545,
+          "threshold": 0.24347259577062003,
+          "sensitivity": 0.90625,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7748917748917749,
+          "threshold": 0.28253401643243303,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 4,
+          "auc": 0.8652777777777777,
+          "threshold": 0.620404378085255,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.7916666666666666
+        },
+        {
+          "fold": 5,
+          "auc": 0.8053977272727273,
+          "threshold": 0.40089539529321533,
+          "sensitivity": 0.90625,
+          "specificity": 0.5909090909090908
+        }
+      ],
+      "mean_auc": 0.8105781024531025,
+      "mean_sensitivity": 0.9067424242424243,
+      "mean_specificity": 0.5397186147186147
+    },
+    {
+      "rep": "umap_cosine",
+      "model": "SVM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7994227994227995,
+          "threshold": 0.34116137530390556,
+          "sensitivity": 0.9393939393939394,
+          "specificity": 0.5714285714285714
+        },
+        {
+          "fold": 2,
+          "auc": 0.8323863636363636,
+          "threshold": 0.3388229969449479,
+          "sensitivity": 0.9375,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.746031746031746,
+          "threshold": 0.32935536076820643,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 4,
+          "auc": 0.8527777777777777,
+          "threshold": 0.4072539032010325,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.75
+        },
+        {
+          "fold": 5,
+          "auc": 0.7627840909090908,
+          "threshold": 0.3364416979058105,
+          "sensitivity": 0.9375,
+          "specificity": 0.4545454545454546
+        }
+      ],
+      "mean_auc": 0.7986805555555556,
+      "mean_sensitivity": 0.9253030303030304,
+      "mean_specificity": 0.5326839826839828
+    },
+    {
+      "rep": "pca",
+      "model": "SVM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7806637806637806,
+          "threshold": 0.29059282915688445,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.38095238095238093
+        },
+        {
+          "fold": 2,
+          "auc": 0.8323863636363636,
+          "threshold": 0.24870387475047362,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7835497835497837,
+          "threshold": 0.29842247435580366,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 4,
+          "auc": 0.8722222222222222,
+          "threshold": 0.6175722485753384,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.7916666666666666
+        },
+        {
+          "fold": 5,
+          "auc": 0.8011363636363636,
+          "threshold": 0.41035140902802036,
+          "sensitivity": 0.875,
+          "specificity": 0.5909090909090908
+        }
+      ],
+      "mean_auc": 0.8139917027417027,
+      "mean_sensitivity": 0.8942424242424243,
+      "mean_specificity": 0.5301948051948051
+    },
+    {
+      "rep": "umap",
+      "model": "LightGBM",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7994227994227996,
+          "threshold": 0.03361334242050851,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 2,
+          "auc": 0.8011363636363636,
+          "threshold": 0.0008043185305012071,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.797979797979798,
+          "threshold": 0.010957808311153835,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.8916666666666667,
+          "threshold": 0.27788075345086805,
+          "sensitivity": 0.9,
+          "specificity": 0.6666666666666667
+        },
+        {
+          "fold": 5,
+          "auc": 0.8849431818181818,
+          "threshold": 0.14144940559694766,
+          "sensitivity": 0.9375,
+          "specificity": 0.7272727272727273
+        }
+      ],
+      "mean_auc": 0.835029761904762,
+      "mean_sensitivity": 0.9000757575757575,
+      "mean_specificity": 0.522943722943723
+    },
+    {
+      "rep": "pca",
+      "model": "GradientBoosting",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7907647907647909,
+          "threshold": 0.3550878362250813,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 2,
+          "auc": 0.7883522727272728,
+          "threshold": 0.07767984886377806,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7344877344877345,
+          "threshold": 0.22835072795355765,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.9055555555555556,
+          "threshold": 0.3547074477144544,
+          "sensitivity": 0.9,
+          "specificity": 0.75
+        },
+        {
+          "fold": 5,
+          "auc": 0.8053977272727272,
+          "threshold": 0.42030712067210724,
+          "sensitivity": 0.90625,
+          "specificity": 0.5909090909090908
+        }
+      ],
+      "mean_auc": 0.8049116161616162,
+      "mean_sensitivity": 0.8877651515151517,
+      "mean_specificity": 0.5218614718614718
+    },
+    {
+      "rep": "umap_cosine",
+      "model": "RandomForest",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.751082251082251,
+          "threshold": 0.34,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 2,
+          "auc": 0.7798295454545454,
+          "threshold": 0.245,
+          "sensitivity": 0.875,
+          "specificity": 0.2727272727272727
+        },
+        {
+          "fold": 3,
+          "auc": 0.7532467532467533,
+          "threshold": 0.3575,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.8923611111111112,
+          "threshold": 0.5725,
+          "sensitivity": 0.9,
+          "specificity": 0.7916666666666666
+        },
+        {
+          "fold": 5,
+          "auc": 0.8082386363636364,
+          "threshold": 0.44,
+          "sensitivity": 0.90625,
+          "specificity": 0.6363636363636364
+        }
+      ],
+      "mean_auc": 0.7969516594516595,
+      "mean_sensitivity": 0.8877651515151517,
+      "mean_specificity": 0.5211038961038961
+    },
+    {
+      "rep": "none",
+      "model": "GradientBoosting",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7705627705627706,
+          "threshold": 0.3433885959075757,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 2,
+          "auc": 0.796875,
+          "threshold": 0.06788926487376795,
+          "sensitivity": 0.90625,
+          "specificity": 0.40909090909090906
+        },
+        {
+          "fold": 3,
+          "auc": 0.8066378066378066,
+          "threshold": 0.19757546770884213,
+          "sensitivity": 1.0,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 4,
+          "auc": 0.8819444444444444,
+          "threshold": 0.3165783739020911,
+          "sensitivity": 0.9,
+          "specificity": 0.6666666666666667
+        },
+        {
+          "fold": 5,
+          "auc": 0.8224431818181818,
+          "threshold": 0.3035516076177795,
+          "sensitivity": 1.0,
+          "specificity": 0.5454545454545454
+        }
+      ],
+      "mean_auc": 0.8156926406926406,
+      "mean_sensitivity": 0.9370075757575759,
+      "mean_specificity": 0.5051948051948052
+    },
+    {
+      "rep": "umap",
+      "model": "XGBoost",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7647907647907648,
+          "threshold": 0.12402848154306412,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.33333333333333337
+        },
+        {
+          "fold": 2,
+          "auc": 0.7940340909090909,
+          "threshold": 0.04194341599941254,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.8210678210678211,
+          "threshold": 0.16525258123874664,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.8847222222222222,
+          "threshold": 0.37686291337013245,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.625
+        },
+        {
+          "fold": 5,
+          "auc": 0.8764204545454546,
+          "threshold": 0.433886855840683,
+          "sensitivity": 0.875,
+          "specificity": 0.7727272727272727
+        }
+      ],
+      "mean_auc": 0.8282070707070709,
+      "mean_sensitivity": 0.8942424242424243,
+      "mean_specificity": 0.5046536796536797
+    },
+    {
+      "rep": "umap_cosine",
+      "model": "Logistic",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7965367965367965,
+          "threshold": 0.32833049906709866,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.6190476190476191
+        },
+        {
+          "fold": 2,
+          "auc": 0.8196022727272727,
+          "threshold": 0.26702468697255943,
+          "sensitivity": 0.875,
+          "specificity": 0.4545454545454546
+        },
+        {
+          "fold": 3,
+          "auc": 0.7417027417027418,
+          "threshold": 0.38466688171914204,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 4,
+          "auc": 0.8291666666666667,
+          "threshold": 0.3190483663419725,
+          "sensitivity": 0.9,
+          "specificity": 0.41666666666666663
+        },
+        {
+          "fold": 5,
+          "auc": 0.7755681818181819,
+          "threshold": 0.3771708877751291,
+          "sensitivity": 0.875,
+          "specificity": 0.5
+        }
+      ],
+      "mean_auc": 0.7925153318903317,
+      "mean_sensitivity": 0.8815151515151516,
+      "mean_specificity": 0.5028138528138528
+    },
+    {
+      "rep": "umap_cosine",
+      "model": "GradientBoosting",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7907647907647908,
+          "threshold": 0.2407742839236196,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 2,
+          "auc": 0.7826704545454546,
+          "threshold": 0.09832590203019126,
+          "sensitivity": 0.875,
+          "specificity": 0.4545454545454546
+        },
+        {
+          "fold": 3,
+          "auc": 0.7186147186147186,
+          "threshold": 0.1965899639139918,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.33333333333333337
+        },
+        {
+          "fold": 4,
+          "auc": 0.8805555555555556,
+          "threshold": 0.26391707567319234,
+          "sensitivity": 0.9,
+          "specificity": 0.625
+        },
+        {
+          "fold": 5,
+          "auc": 0.8096590909090909,
+          "threshold": 0.23914558323608648,
+          "sensitivity": 0.875,
+          "specificity": 0.4545454545454546
+        }
+      ],
+      "mean_auc": 0.7964529220779221,
+      "mean_sensitivity": 0.8815151515151516,
+      "mean_specificity": 0.4687229437229437
+    },
+    {
+      "rep": "none",
+      "model": "RandomForest",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7568542568542569,
+          "threshold": 0.2825,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.19047619047619047
+        },
+        {
+          "fold": 2,
+          "auc": 0.7968749999999999,
+          "threshold": 0.2575,
+          "sensitivity": 0.90625,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.8080808080808081,
+          "threshold": 0.35,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.8875,
+          "threshold": 0.5,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.7083333333333333
+        },
+        {
+          "fold": 5,
+          "auc": 0.8345170454545454,
+          "threshold": 0.4725,
+          "sensitivity": 0.875,
+          "specificity": 0.6363636363636364
+        }
+      ],
+      "mean_auc": 0.8167654220779219,
+      "mean_sensitivity": 0.8944318181818183,
+      "mean_specificity": 0.46547619047619043
+    },
+    {
+      "rep": "none",
+      "model": "Logistic",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.8008658008658008,
+          "threshold": 0.3896529742078264,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.6190476190476191
+        },
+        {
+          "fold": 2,
+          "auc": 0.8366477272727272,
+          "threshold": 0.22830385075473186,
+          "sensitivity": 0.90625,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7676767676767677,
+          "threshold": 0.3217727070615802,
+          "sensitivity": 0.9696969696969697,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 4,
+          "auc": 0.8319444444444445,
+          "threshold": 0.349775553042348,
+          "sensitivity": 0.9,
+          "specificity": 0.375
+        },
+        {
+          "fold": 5,
+          "auc": 0.7727272727272728,
+          "threshold": 0.36122234338844167,
+          "sensitivity": 0.875,
+          "specificity": 0.40909090909090906
+        }
+      ],
+      "mean_auc": 0.8019724025974027,
+      "mean_sensitivity": 0.9059469696969696,
+      "mean_specificity": 0.45811688311688314
+    },
+    {
+      "rep": "pca",
+      "model": "Logistic",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7965367965367965,
+          "threshold": 0.37357679166020935,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.5714285714285714
+        },
+        {
+          "fold": 2,
+          "auc": 0.8323863636363636,
+          "threshold": 0.22459368203293054,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7662337662337662,
+          "threshold": 0.31601508790604466,
+          "sensitivity": 0.9696969696969697,
+          "specificity": 0.5238095238095238
+        },
+        {
+          "fold": 4,
+          "auc": 0.8333333333333334,
+          "threshold": 0.341668709967198,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.375
+        },
+        {
+          "fold": 5,
+          "auc": 0.7741477272727273,
+          "threshold": 0.35294395417379787,
+          "sensitivity": 0.875,
+          "specificity": 0.40909090909090906
+        }
+      ],
+      "mean_auc": 0.8005275974025974,
+      "mean_sensitivity": 0.9063636363636365,
+      "mean_specificity": 0.44859307359307354
+    },
+    {
+      "rep": "pca",
+      "model": "RandomForest",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7604617604617604,
+          "threshold": 0.3,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.2857142857142857
+        },
+        {
+          "fold": 2,
+          "auc": 0.7919034090909091,
+          "threshold": 0.24,
+          "sensitivity": 0.875,
+          "specificity": 0.2727272727272727
+        },
+        {
+          "fold": 3,
+          "auc": 0.7626262626262627,
+          "threshold": 0.345,
+          "sensitivity": 0.9090909090909091,
+          "specificity": 0.4285714285714286
+        },
+        {
+          "fold": 4,
+          "auc": 0.8868055555555555,
+          "threshold": 0.495,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.7083333333333333
+        },
+        {
+          "fold": 5,
+          "auc": 0.8125,
+          "threshold": 0.455,
+          "sensitivity": 0.90625,
+          "specificity": 0.5454545454545454
+        }
+      ],
+      "mean_auc": 0.8028593975468976,
+      "mean_sensitivity": 0.9004924242424244,
+      "mean_specificity": 0.44816017316017315
+    },
+    {
+      "rep": "umap",
+      "model": "GradientBoosting",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7835497835497837,
+          "threshold": 0.1577245221854387,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 2,
+          "auc": 0.796875,
+          "threshold": 0.09253464531852983,
+          "sensitivity": 0.875,
+          "specificity": 0.5
+        },
+        {
+          "fold": 3,
+          "auc": 0.7041847041847041,
+          "threshold": 0.21830788711873506,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.38095238095238093
+        },
+        {
+          "fold": 4,
+          "auc": 0.8430555555555557,
+          "threshold": 0.19645295427508763,
+          "sensitivity": 0.9333333333333333,
+          "specificity": 0.33333333333333337
+        },
+        {
+          "fold": 5,
+          "auc": 0.8565340909090908,
+          "threshold": 0.22001597103725815,
+          "sensitivity": 0.90625,
+          "specificity": 0.5
+        }
+      ],
+      "mean_auc": 0.7968398268398268,
+      "mean_sensitivity": 0.8944318181818183,
+      "mean_specificity": 0.43809523809523815
+    },
+    {
+      "rep": "umap",
+      "model": "RandomForest",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7417027417027418,
+          "threshold": 0.2575,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.1428571428571429
+        },
+        {
+          "fold": 2,
+          "auc": 0.7741477272727273,
+          "threshold": 0.2475,
+          "sensitivity": 0.875,
+          "specificity": 0.2727272727272727
+        },
+        {
+          "fold": 3,
+          "auc": 0.7943722943722945,
+          "threshold": 0.3675,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.47619047619047616
+        },
+        {
+          "fold": 4,
+          "auc": 0.888888888888889,
+          "threshold": 0.4625,
+          "sensitivity": 0.9,
+          "specificity": 0.5416666666666667
+        },
+        {
+          "fold": 5,
+          "auc": 0.8487215909090909,
+          "threshold": 0.4275,
+          "sensitivity": 0.90625,
+          "specificity": 0.6363636363636364
+        }
+      ],
+      "mean_auc": 0.8095666486291486,
+      "mean_sensitivity": 0.8877651515151517,
+      "mean_specificity": 0.413961038961039
+    },
+    {
+      "rep": "umap",
+      "model": "Logistic",
+      "folds": [
+        {
+          "fold": 1,
+          "auc": 0.7691197691197691,
+          "threshold": 0.22769813293547556,
+          "sensitivity": 0.8787878787878788,
+          "specificity": 0.33333333333333337
+        },
+        {
+          "fold": 2,
+          "auc": 0.8338068181818181,
+          "threshold": 0.2131991371870015,
+          "sensitivity": 0.875,
+          "specificity": 0.36363636363636365
+        },
+        {
+          "fold": 3,
+          "auc": 0.7157287157287158,
+          "threshold": 0.28121356716757545,
+          "sensitivity": 0.9393939393939394,
+          "specificity": 0.33333333333333337
+        },
+        {
+          "fold": 4,
+          "auc": 0.8291666666666667,
+          "threshold": 0.3811897398884357,
+          "sensitivity": 0.9,
+          "specificity": 0.5
+        },
+        {
+          "fold": 5,
+          "auc": 0.7727272727272727,
+          "threshold": 0.2857424034571091,
+          "sensitivity": 0.875,
+          "specificity": 0.2727272727272727
+        }
+      ],
+      "mean_auc": 0.7841098484848483,
+      "mean_sensitivity": 0.8936363636363638,
+      "mean_specificity": 0.3606060606060606
+    }
+  ]
+}

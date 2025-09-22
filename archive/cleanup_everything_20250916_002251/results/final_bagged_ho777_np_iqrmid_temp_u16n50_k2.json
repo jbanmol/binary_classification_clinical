@@ -1,0 +1,13 @@
+{
+  "pattern": "results/final_s*_ho777_np_iqrmid_temp_u16n50_k2.json",
+  "files": [
+    "results/final_s29_ho777_np_iqrmid_temp_u16n50_k2.json",
+    "results/final_s43_ho777_np_iqrmid_temp_u16n50_k2.json"
+  ],
+  "bagged_metrics": {
+    "threshold": 0.5210105261038886,
+    "sensitivity": 0.8823529411764706,
+    "specificity": 0.8,
+    "auc": 0.9058823529411765
+  }
+}

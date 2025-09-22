@@ -1,0 +1,618 @@
+#!/usr/bin/env python3
+"""
+RAG Research Engine for Binary Classification Project
+Intelligent research system that analyzes coloring game data, extracts features,
+identifies patterns, and provides insights for ASD vs TD classification
+"""
+
+import json
+import numpy as np
+import pandas as pd
+from pathlib import Path
+from typing import Dict, List, Any, Optional, Tuple
+from datetime import datetime
+import chromadb
+from chromadb.config import Settings
+from sentence_transformers import SentenceTransformer
+import warnings
+warnings.filterwarnings('ignore')
+
+try:
+    # Prefer explicit package import to avoid clashing with project root config.py
+    from rag_system.config import (
+        config, get_binary_label, is_coloring_file, extract_child_id, extract_session_timestamp
+    )
+except Exception:
+    # Fallback for direct execution within rag_system directory
+    from config import (
+        config, get_binary_label, is_coloring_file, extract_child_id, extract_session_timestamp
+    )
+
+class ColoringDataProcessor:
+    """Process raw coloring game JSON data into structured format"""
+    
+    def __init__(self):
+        self.labels_df = None
+        self.labels_dict = {}
+        self._load_labels()
+    
+    def _load_labels(self):
+        """Load and process labels with binary classification"""
+        try:
+            self.labels_df = pd.read_csv(config.LABELS_PATH)
+            # Apply binary classification mapping
+            self.labels_df['Binary_Label'] = self.labels_df['Group'].apply(get_binary_label)
+            self.labels_dict = dict(zip(
+                self.labels_df['Unity_id'], 
+                self.labels_df['Binary_Label']
+            ))
+            print(f"Loaded labels for {len(self.labels_dict)} children")
+            print(f"Label distribution: {self.labels_df['Binary_Label'].value_counts().to_dict()}")
+        except Exception as e:
+            print(f"Error loading labels: {e}")
+    
+    def parse_session_file(self, filepath: Path) -> Optional[Dict]:
+        """Parse a single coloring session JSON file"""
+        try:
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+            
+            if 'json' not in data or 'touchData' not in data['json']:
+                return None
+                
+            touch_data = data['json']['touchData']
+            child_id = extract_child_id(filepath)
+            
+            return {
+                'child_id': child_id,
+                'filepath': str(filepath),
+                'filename': filepath.name,
+                'timestamp': extract_session_timestamp(filepath),
+                'label': self.labels_dict.get(child_id, 'UNKNOWN'),
+                'touch_data': touch_data,
+                'stroke_count': len(touch_data),
+                'total_points': sum(len(stroke) for stroke in touch_data.values())
+            }
+        except Exception as e:
+            print(f"Error parsing {filepath}: {e}")
+            return None
+    
+    def extract_behavioral_features(self, session_data: Dict) -> Dict:
+        """Extract comprehensive behavioral features from session data"""
+        if not session_data or not session_data.get('touch_data'):
+            return {}
+        
+        features = {}
+        touch_data = session_data['touch_data']
+        
+        # Basic session metadata
+        features.update({
+            'child_id': session_data['child_id'],
+            'session_timestamp': session_data['timestamp'],
+            'binary_label': session_data['label'],
+            'stroke_count': session_data['stroke_count'],
+            'total_touch_points': session_data['total_points']
+        })
+        
+        # Analyze all touch points
+        all_points = []
+        for stroke_points in touch_data.values():
+            all_points.extend(stroke_points)
+        
+        if not all_points:
+            return features
+        
+        # Template and zone analysis
+        zones = [p.get('zone', 'Unknown') for p in all_points]
+        colors = [p.get('color', 'Unknown') for p in all_points]
+        features.update({
+            'unique_zones': len(set(zones)),
+            'unique_colors': len(set(colors)),
+            'zone_distribution': dict(pd.Series(zones).value_counts()),
+            'color_distribution': dict(pd.Series(colors).value_counts())
+        })
+        
+        # Temporal features
+        times = [p['time'] for p in all_points if 'time' in p]
+        if times:
+            features.update({
+                'session_duration': max(times) - min(times),
+                'avg_time_between_points': np.mean(np.diff(sorted(times))) if len(times) > 1 else 0
+            })
+        
+        # Motor control features
+        velocities = []
+        accelerations = []
+        for stroke_points in touch_data.values():
+            if len(stroke_points) < 2:
+                continue
+            
+            # Calculate velocities within stroke
+            for i in range(1, len(stroke_points)):
+                p1, p2 = stroke_points[i-1], stroke_points[i]
+                if 'x' in p1 and 'y' in p1 and 'x' in p2 and 'y' in p2 and 'time' in p1 and 'time' in p2:
+                    dx = p2['x'] - p1['x']
+                    dy = p2['y'] - p1['y']
+                    dt = p2['time'] - p1['time']
+                    if dt > 0:
+                        velocity = np.sqrt(dx**2 + dy**2) / dt
+                        velocities.append(velocity)
+        
+        if velocities:
+            features.update({
+                'velocity_mean': np.mean(velocities),
+                'velocity_std': np.std(velocities),
+                'velocity_max': np.max(velocities),
+                'velocity_cv': np.std(velocities) / np.mean(velocities) if np.mean(velocities) > 0 else 0
+            })
+        
+        # Multi-touch analysis
+        finger_ids = [p.get('fingerId', 0) for p in all_points]
+        touch_phases = [p.get('touchPhase', 'Unknown') for p in all_points]
+        
+        features.update({
+            'max_finger_id': max(finger_ids) if finger_ids else 0,
+            'unique_fingers': len(set(finger_ids)),
+            'canceled_touches': touch_phases.count('Canceled'),
+            'palm_touch_ratio': touch_phases.count('Canceled') / len(touch_phases) if touch_phases else 0
+        })
+        
+        # Accelerometer features (tremor indicators)
+        acc_magnitudes = []
+        for p in all_points:
+            if all(k in p for k in ['accx', 'accy', 'accz']):
+                acc_mag = np.sqrt(p['accx']**2 + p['accy']**2 + p['accz']**2)
+                acc_magnitudes.append(acc_mag)
+        
+        if acc_magnitudes:
+            features.update({
+                'acc_magnitude_mean': np.mean(acc_magnitudes),
+                'acc_magnitude_std': np.std(acc_magnitudes),
+                'tremor_indicator': np.std(acc_magnitudes)  # Higher std indicates more tremor
+            })
+        
+        # Completion and progress features
+        completion_percs = [p.get('completionPerc', 0) for p in all_points]
+        if completion_percs:
+            features.update({
+                'final_completion': max(completion_percs),
+                'completion_progress_rate': (max(completion_percs) - min(completion_percs)) / len(completion_percs) if len(completion_percs) > 1 else 0
+            })
+        
+        return features
+
+class RAGResearchEngine:
+    """RAG-powered research engine for behavioral analysis"""
+    
+    def __init__(self):
+        self.data_processor = ColoringDataProcessor()
+        self.embeddings_model = SentenceTransformer(config.EMBEDDING_MODEL)
+        self.vector_db = None
+        self.behavioral_database = []
+        self._initialize_vector_db()
+        self._label_centroids = {}
+    
+    def _initialize_vector_db(self):
+        """Initialize ChromaDB vector database"""
+        try:
+            client = chromadb.PersistentClient(path=str(config.VECTOR_DB_PATH))
+            self.vector_db = client.get_or_create_collection(
+                name=config.VECTOR_DB_NAME,
+                metadata={"description": "ASD vs TD behavioral patterns from coloring game"}
+            )
+            print(f"Initialized vector database at {config.VECTOR_DB_PATH}")
+        except Exception as e:
+            print(f"Error initializing vector database: {e}")
+    
+    def ingest_raw_data(self, limit: Optional[int] = None) -> Dict[str, Any]:
+        """Ingest and process raw coloring game data"""
+        print("Starting data ingestion...")
+        
+        ingested_sessions = []
+        processed_count = 0
+        
+        for child_folder in config.RAW_DATA_PATH.iterdir():
+            if not child_folder.is_dir():
+                continue
+                
+            coloring_files = list(child_folder.glob("Coloring_*.json"))
+            for filepath in coloring_files:
+                if limit and processed_count >= limit:
+                    break
+                    
+                session_data = self.data_processor.parse_session_file(filepath)
+                if session_data and session_data['label'] != 'UNKNOWN':
+                    behavioral_features = self.data_processor.extract_behavioral_features(session_data)
+                    ingested_sessions.append(behavioral_features)
+                    processed_count += 1
+                    
+                if processed_count % 50 == 0:
+                    print(f"Processed {processed_count} sessions...")
+        
+        self.behavioral_database = ingested_sessions
+        
+        # Generate summary statistics
+        df = pd.DataFrame(ingested_sessions)
+        summary = {
+            'total_sessions': len(ingested_sessions),
+            'unique_children': df['child_id'].nunique() if not df.empty else 0,
+            'label_distribution': df['binary_label'].value_counts().to_dict() if not df.empty else {},
+            'sessions_per_child': df.groupby('child_id').size().describe().to_dict() if not df.empty else {}
+        }
+        
+        print(f"Data ingestion complete: {summary}")
+        return summary
+    
+    def create_behavioral_summaries(self) -> List[Dict]:
+        """Create textual summaries of behavioral patterns for vector indexing"""
+        summaries = []
+        
+        for session_features in self.behavioral_database:
+            # Create rich textual summary for each session (NO label or child_id tokens)
+            child_id = session_features.get('child_id', 'unknown')
+            label = session_features.get('binary_label', 'unknown')
+            
+            # Behavioral text that excludes label and id to avoid leakage
+            motor_desc = "Behavioral summary: "
+            if 'velocity_mean' in session_features:
+                vel_mean = session_features['velocity_mean']
+                vel_std = session_features['velocity_std']
+                motor_desc += f"average movement velocity {vel_mean:.2f} with variability {vel_std:.2f}. "
+            
+            # Multi-touch summary
+            if 'unique_fingers' in session_features:
+                fingers = session_features['unique_fingers']
+                palm_ratio = session_features.get('palm_touch_ratio', 0)
+            motor_desc += f"Used {fingers} fingers with {palm_ratio:.1%} palm touches. "
+            
+            # Zone and completion summary
+            if 'unique_zones' in session_features:
+                zones = session_features['unique_zones']
+                completion = session_features.get('final_completion', 0)
+            motor_desc += f"Touched {zones} zones, completion {completion:.1f}%. "
+            
+            # Tremor indicators
+            if 'tremor_indicator' in session_features:
+                tremor = session_features['tremor_indicator']
+            motor_desc += f"Tremor indicator {tremor:.3f}. "
+            
+            # Session characteristics
+            duration = session_features.get('session_duration', 0)
+            strokes = session_features.get('stroke_count', 0)
+            motor_desc += f"Session duration {duration:.1f}s with {strokes} strokes."
+            
+            summary_doc = {
+                'id': f"{child_id}_{session_features.get('session_timestamp', 'unknown')}",
+                'text': motor_desc,
+                'metadata': {
+                    'child_id': child_id,
+                    'binary_label': label,
+                    'session_timestamp': session_features.get('session_timestamp'),
+                    'feature_category': 'behavioral_summary',
+                    **{k: v for k, v in session_features.items() if isinstance(v, (int, float, str))}
+                }
+            }
+            summaries.append(summary_doc)
+        
+        return summaries
+    
+    def index_behavioral_data(self):
+        """Index behavioral summaries in vector database"""
+        if not self.behavioral_database:
+            print("No behavioral data to index. Run ingest_raw_data first.")
+            return
+        
+        print("Creating behavioral summaries for indexing...")
+        summaries = self.create_behavioral_summaries()
+        
+        # Prepare data for ChromaDB
+        texts = [doc['text'] for doc in summaries]
+        metadatas = [doc['metadata'] for doc in summaries]
+        ids = [doc['id'] for doc in summaries]
+        
+        print(f"Generating embeddings for {len(texts)} behavioral summaries...")
+        embeddings = self.embeddings_model.encode(texts, convert_to_numpy=True)
+        
+        # Add to vector database in batches
+        batch_size = 100
+        for i in range(0, len(texts), batch_size):
+            batch_end = min(i + batch_size, len(texts))
+            try:
+                self.vector_db.add(
+                    documents=texts[i:batch_end],
+                    metadatas=metadatas[i:batch_end],
+                    ids=ids[i:batch_end],
+                    embeddings=embeddings[i:batch_end].tolist()
+                )
+            except Exception as e:
+                # Likely duplicate IDs on re-index; attempt update or skip
+                try:
+                    if hasattr(self.vector_db, 'update'):
+                        self.vector_db.update(
+                            documents=texts[i:batch_end],
+                            metadatas=metadatas[i:batch_end],
+                            ids=ids[i:batch_end],
+                            embeddings=embeddings[i:batch_end].tolist()
+                        )
+                    else:
+                        print(f"Warning: indexing batch {i//batch_size + 1} failed: {e}. Skipping (possible duplicates).")
+                except Exception:
+                    print(f"Warning: indexing batch {i//batch_size + 1} update failed. Skipping (possible duplicates).")
+            
+            print(f"Indexed batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}")
+        
+        print(f"Successfully indexed {len(texts)} behavioral summaries")
+    
+    def research_query(self, query: str, n_results: int = 10) -> Dict[str, Any]:
+        """Execute research query against behavioral database"""
+        if not self.vector_db:
+            return {"error": "Vector database not initialized"}
+        
+        try:
+            # Search for relevant behavioral patterns
+            results = self.vector_db.query(
+                query_texts=[query],
+                n_results=n_results,
+                include=["documents", "metadatas", "distances"]
+            )
+            
+            # Analyze results
+            documents = results['documents'][0]
+            metadatas = results['metadatas'][0] 
+            distances = results['distances'][0]
+            
+            # Extract insights
+            labels = [meta.get('binary_label') for meta in metadatas]
+            asd_count = labels.count('ASD')
+            td_count = labels.count('TD')
+            
+            # Statistical summary of retrieved sessions
+            numeric_features = {}
+            for meta in metadatas:
+                for key, value in meta.items():
+                    if isinstance(value, (int, float)) and key not in ['child_id', 'session_timestamp']:
+                        if key not in numeric_features:
+                            numeric_features[key] = []
+                        numeric_features[key].append(value)
+            
+            feature_stats = {}
+            for feature, values in numeric_features.items():
+                if len(values) > 1:
+                    feature_stats[feature] = {
+                        'mean': np.mean(values),
+                        'std': np.std(values),
+                        'min': np.min(values),
+                        'max': np.max(values)
+                    }
+            
+            return {
+                'query': query,
+                'total_results': len(documents),
+                'label_distribution': {'ASD': asd_count, 'TD': td_count},
+                'most_relevant_patterns': documents[:5],
+                'feature_statistics': feature_stats,
+                'average_similarity': 1 - np.mean(distances),  # Convert distance to similarity
+                'research_insights': self._generate_research_insights(query, metadatas, labels)
+            }
+            
+        except Exception as e:
+            return {"error": f"Query execution failed: {e}"}
+    
+    def _generate_research_insights(self, query: str, metadatas: List[Dict], labels: List[str]) -> List[str]:
+        """Generate research insights from query results"""
+        insights = []
+        
+        # Diagnostic group differences
+        asd_sessions = [meta for meta, label in zip(metadatas, labels) if label == 'ASD']
+        td_sessions = [meta for meta, label in zip(metadatas, labels) if label == 'TD']
+        
+        if len(asd_sessions) > 0 and len(td_sessions) > 0:
+            # Compare motor control features
+            for feature in ['velocity_mean', 'velocity_std', 'tremor_indicator', 'palm_touch_ratio']:
+                asd_values = [s.get(feature) for s in asd_sessions if s.get(feature) is not None]
+                td_values = [s.get(feature) for s in td_sessions if s.get(feature) is not None]
+                
+                if len(asd_values) > 0 and len(td_values) > 0:
+                    asd_mean = np.mean(asd_values)
+                    td_mean = np.mean(td_values)
+                    diff_pct = ((asd_mean - td_mean) / td_mean * 100) if td_mean != 0 else 0
+                    
+                    if abs(diff_pct) > 10:  # Notable difference
+                        direction = "higher" if diff_pct > 0 else "lower"
+                        insights.append(f"ASD group shows {abs(diff_pct):.1f}% {direction} {feature.replace('_', ' ')} compared to TD group")
+        
+        # Task completion patterns
+        asd_completion = np.mean([s.get('final_completion', 0) for s in asd_sessions])
+        td_completion = np.mean([s.get('final_completion', 0) for s in td_sessions])
+        
+        if abs(asd_completion - td_completion) > 5:
+            better_group = "ASD" if asd_completion > td_completion else "TD"
+            insights.append(f"{better_group} group shows better task completion ({asd_completion:.1f}% vs {td_completion:.1f}%)")
+        
+        return insights
+    
+    def get_feature_recommendations(self) -> Dict[str, Any]:
+        """Provide ML feature recommendations based on data analysis"""
+        if not self.behavioral_database:
+            return {"error": "No behavioral data available"}
+        
+        df = pd.DataFrame(self.behavioral_database)
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        
+        recommendations = {
+            'total_features_available': len(numeric_cols),
+            'recommended_features': {},
+            'feature_importance_analysis': {},
+            'data_quality_report': {}
+        }
+        
+        # Analyze feature distributions by diagnostic group
+        for feature in numeric_cols:
+            if feature in ['velocity_mean', 'velocity_std', 'tremor_indicator', 'palm_touch_ratio', 
+                          'final_completion', 'unique_fingers', 'session_duration']:
+                
+                asd_data = df[df['binary_label'] == 'ASD'][feature].dropna()
+                td_data = df[df['binary_label'] == 'TD'][feature].dropna()
+                
+                if len(asd_data) > 5 and len(td_data) > 5:
+                    # Calculate effect size (Cohen's d)
+                    pooled_std = np.sqrt((asd_data.var() + td_data.var()) / 2)
+                    effect_size = (asd_data.mean() - td_data.mean()) / pooled_std if pooled_std > 0 else 0
+                    
+                    recommendations['recommended_features'][feature] = {
+                        'asd_mean': asd_data.mean(),
+                        'td_mean': td_data.mean(),
+                        'effect_size': abs(effect_size),
+                        'recommendation': 'Strong' if abs(effect_size) > 0.8 else 'Moderate' if abs(effect_size) > 0.5 else 'Weak'
+                    }
+        
+        return recommendations
+
+    def compute_label_centroids(self) -> Dict[str, Any]:
+        """Compute label centroids (ASD, TD) in embedding space from behavioral summaries"""
+        summaries = self.create_behavioral_summaries()
+        if not summaries:
+            return {}
+        texts = [doc['text'] for doc in summaries]
+        metadatas = [doc['metadata'] for doc in summaries]
+        embeddings = self.embeddings_model.encode(texts, convert_to_numpy=True)
+        import numpy as np
+        labels = np.array([m.get('binary_label') for m in metadatas])
+        centroids = {}
+        for lab in ['ASD', 'TD']:
+            mask = labels == lab
+            if mask.any():
+                centroids[lab] = embeddings[mask].mean(axis=0)
+        self._label_centroids = centroids
+        return centroids
+
+    def compute_child_rag_features(self) -> 'pd.DataFrame':
+        """Compute per-child RAG numeric features (similarities/distances to label centroids)"""
+        import numpy as np
+        import pandas as pd
+        from sklearn.metrics.pairwise import cosine_similarity
+        # Ensure centroids
+        if not self._label_centroids:
+            self.compute_label_centroids()
+        if not self._label_centroids:
+            return pd.DataFrame(columns=['child_id'])
+        summaries = self.create_behavioral_summaries()
+        texts = [doc['text'] for doc in summaries]
+        metadatas = [doc['metadata'] for doc in summaries]
+        emb = self.embeddings_model.encode(texts, convert_to_numpy=True)
+        # Map child to embeddings
+        child_to_vecs = {}
+        for vec, meta in zip(emb, metadatas):
+            cid = meta.get('child_id')
+            if cid is None:
+                continue
+            child_to_vecs.setdefault(cid, []).append(vec)
+        rows = []
+        asd_c = self._label_centroids.get('ASD')
+        td_c = self._label_centroids.get('TD')
+        for cid, vecs in child_to_vecs.items():
+            V = np.vstack(vecs)
+            v_mean = V.mean(axis=0)
+            # Cosine similarities
+            sim_asd = float(cosine_similarity(v_mean.reshape(1, -1), asd_c.reshape(1, -1))[0, 0]) if asd_c is not None else np.nan
+            sim_td = float(cosine_similarity(v_mean.reshape(1, -1), td_c.reshape(1, -1))[0, 0]) if td_c is not None else np.nan
+            # Euclidean distances
+            dist_asd = float(np.linalg.norm(v_mean - asd_c)) if asd_c is not None else np.nan
+            dist_td = float(np.linalg.norm(v_mean - td_c)) if td_c is not None else np.nan
+            rows.append({
+                'child_id': cid,
+                'rag_sim_asd': sim_asd,
+                'rag_sim_td': sim_td,
+                'rag_sim_delta': sim_asd - sim_td if (sim_asd==sim_asd and sim_td==sim_td) else np.nan,
+                'rag_dist_asd': dist_asd,
+                'rag_dist_td': dist_td,
+                'rag_dist_delta': (dist_td - dist_asd) if (dist_asd==dist_asd and dist_td==dist_td) else np.nan,
+            })
+        return pd.DataFrame(rows)
+
+    def compute_child_rag_features_leak_safe(self, train_child_ids: List[str], target_child_ids: Optional[List[str]] = None) -> 'pd.DataFrame':
+        """Compute per-child RAG numeric features using centroids computed only from
+        training children (leakage-safe). Applies those centroids to both training
+        and target (e.g., test) children to generate numeric RAG features.
+        """
+        import numpy as np
+        import pandas as pd
+        from sklearn.metrics.pairwise import cosine_similarity
+
+        if not self.behavioral_database:
+            return pd.DataFrame(columns=['child_id'])
+
+        # Build summaries and metadata for all sessions
+        summaries = self.create_behavioral_summaries()
+        if not summaries:
+            return pd.DataFrame(columns=['child_id'])
+
+        texts = [doc['text'] for doc in summaries]
+        metadatas = [doc['metadata'] for doc in summaries]
+
+        train_set = set(train_child_ids or [])
+        if target_child_ids is None:
+            target_set = set([m.get('child_id') for m in metadatas if m.get('child_id') is not None])
+        else:
+            target_set = set(target_child_ids)
+
+        # Indices for training and target children
+        train_idx = [i for i, m in enumerate(metadatas)
+                     if m.get('child_id') in train_set and m.get('binary_label') in ('ASD', 'TD')]
+        target_idx = [i for i, m in enumerate(metadatas)
+                      if m.get('child_id') in target_set]
+
+        if not train_idx or not target_idx:
+            return pd.DataFrame(columns=['child_id'])
+
+        # Encode training summaries and compute label centroids
+        train_texts = [texts[i] for i in train_idx]
+        train_metas = [metadatas[i] for i in train_idx]
+        E_train = self.embeddings_model.encode(train_texts, convert_to_numpy=True)
+        labels = np.array([m.get('binary_label') for m in train_metas])
+
+        centroids: Dict[str, np.ndarray] = {}
+        for lab in ('ASD', 'TD'):
+            mask = labels == lab
+            if mask.any():
+                centroids[lab] = E_train[mask].mean(axis=0)
+
+        if not centroids:
+            return pd.DataFrame(columns=['child_id'])
+
+        # Encode target summaries and aggregate per child
+        target_texts = [texts[i] for i in target_idx]
+        target_metas = [metadatas[i] for i in target_idx]
+        E_target = self.embeddings_model.encode(target_texts, convert_to_numpy=True)
+
+        child_to_vecs: Dict[Any, List[np.ndarray]] = {}
+        for vec, meta in zip(E_target, target_metas):
+            cid = meta.get('child_id')
+            if cid is None:
+                continue
+            child_to_vecs.setdefault(cid, []).append(vec)
+
+        rows = []
+        asd_c = centroids.get('ASD')
+        td_c = centroids.get('TD')
+        for cid, vecs in child_to_vecs.items():
+            V = np.vstack(vecs)
+            v_mean = V.mean(axis=0)
+            sim_asd = float(cosine_similarity(v_mean.reshape(1, -1), asd_c.reshape(1, -1))[0, 0]) if asd_c is not None else np.nan
+            sim_td = float(cosine_similarity(v_mean.reshape(1, -1), td_c.reshape(1, -1))[0, 0]) if td_c is not None else np.nan
+            dist_asd = float(np.linalg.norm(v_mean - asd_c)) if asd_c is not None else np.nan
+            dist_td = float(np.linalg.norm(v_mean - td_c)) if td_c is not None else np.nan
+            rows.append({
+                'child_id': cid,
+                'rag_sim_asd': sim_asd,
+                'rag_sim_td': sim_td,
+                'rag_sim_delta': (sim_asd - sim_td) if (sim_asd == sim_asd and sim_td == sim_td) else np.nan,
+                'rag_dist_asd': dist_asd,
+                'rag_dist_td': dist_td,
+                'rag_dist_delta': (dist_td - dist_asd) if (dist_asd == dist_asd and dist_td == dist_td) else np.nan,
+            })
+
+        return pd.DataFrame(rows)
+
+# Global research engine instance
+research_engine = RAGResearchEngine()

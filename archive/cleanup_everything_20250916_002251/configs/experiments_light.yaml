@@ -1,0 +1,21 @@
+# Lightweight experiment configuration focused on thresholding/calibration selection
+
+A:
+  common:
+    target_sens: 0.86
+    target_spec: 0.70
+    use_umap_cosine: true
+    umap_components: 16
+    umap_neighbors: 50
+    calibration: isotonic
+    models: lightgbm,xgboost,brf,extratrees
+    top_k_models: 2
+    report_holdout_specfirst: true
+  seeds: [17, 29, 43]
+  grid:
+    threshold_policy: [np, spec_first]
+    final_calibration: [temperature, isotonic]
+    threshold_transfer: [iqr_mid, quantile_map]
+    quantile_guard_ks: [0.15]
+    holdout_seed: [777]
+

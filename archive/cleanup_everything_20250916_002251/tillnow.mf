@@ -1,0 +1,193 @@
+Clinical Modeling Progress Log (tillnow.md)
+
+Purpose
+- This document captures all modeling approaches, configurations, and results to date for the ASD/TD binary classification project, with emphasis on clinical operating targets (Sensitivity ≥ 0.86 and Specificity ≥ 0.70).
+- It is intended as a knowledge base to aid future experiments, replication, and analysis.
+
+Project context and data
+- Data ingestion and indexing via RAG engine
+  - Sessions processed: 823
+  - Unique children (child-level modeling unit): 270
+  - Session-level label distribution: ASD 489, TD 334
+- Train/holdout split
+  - GroupShuffleSplit at child level: 80% train, 20% holdout
+- Cross-validation
+  - StratifiedGroupKFold with 5 folds on the training set (child-level groups)
+
+Clinical targets and evaluation policy
+- Primary objective: Choose an operating threshold that meets BOTH Sensitivity ≥ 0.86 and Specificity ≥ 0.70
+- Threshold selection on CV folds
+  1) Prefer thresholds that meet both targets on a fold
+  2) If none, spec-first fallback (maximize sensitivity subject to Specificity ≥ target)
+  3) Otherwise fallback to Youden’s J (tpr - fpr)
+- Holdout threshold transfer policies
+  - Baseline: Median of per-fold selected thresholds
+  - Quantile-mapped threshold transfer (optional): maps CV fold thresholds to holdout score quantiles for more stable transfer when score distributions shift
+
+Feature pipeline (child-level aggregation; leak-safe)
+- Canonical numeric features (means at child level):
+  velocity_mean, velocity_std, velocity_max, velocity_cv,
+  tremor_indicator, acc_magnitude_mean, acc_magnitude_std,
+  palm_touch_ratio, unique_fingers, max_finger_id,
+  session_duration, stroke_count, total_touch_points,
+  unique_zones, unique_colors, final_completion,
+  completion_progress_rate, avg_time_between_points,
+  canceled_touches, session_count
+- Engineered domain ratios (computed on aggregated features without label leakage):
+  - touches_per_zone = total_touch_points / (unique_zones + eps)
+  - strokes_per_zone = stroke_count / (unique_zones + eps)
+  - zones_per_minute = unique_zones / (session_duration/60 + eps)
+  - vel_std_over_mean = velocity_std / (velocity_mean + eps)
+  - acc_std_over_mean = acc_magnitude_std / (acc_magnitude_mean + eps)
+  - avg_ibp_norm = avg_time_between_points / (session_duration + eps)
+  - interpoint_rate = (session_duration + eps) / (avg_time_between_points + eps)
+  - touch_rate = total_touch_points / (session_duration + eps)
+  - stroke_rate = stroke_count / (session_duration + eps)
+- Quantile-binned indicators (one-hot) for selected ratios:
+  touch_rate, strokes_per_zone, vel_std_over_mean, acc_std_over_mean, zones_per_minute, interpoint_rate
+
+Representation options
+- StandardScaler across features (per fold and full-train contexts)
+- UMAP (cosine) embeddings (leak-safe per fold; optionally concatenated to scaled features)
+  - Typical settings: n_components in {10, 16}, n_neighbors=50, metric='cosine', random_state=42
+- PolynomialFeatures (degree=2, include_bias=False) on scaled features (alternative to UMAP)
+
+Model families and configurations (as used across experiments)
+- LightGBM grid: feature_fraction ∈ {0.6, 0.8}, min_child_samples ∈ {20, 40, 60}, scale_pos_weight ∈ {0.75, 1.0, 1.25}; lr=0.05, n_estimators=400, subsample=0.8, colsample_bytree=0.8
+- XGBoost grid: max_depth ∈ {3,4,5}, min_child_weight ∈ {1,3,5}, scale_pos_weight ∈ {0.75, 1.0, 1.25}, regularization explored (reg_alpha ∈ {0.0, 0.5, 1.0}, gamma ∈ {0.0, 0.5})
+- Balanced Random Forest (BRF): n_estimators=400, max_features='sqrt', min_samples_leaf=6
+- ExtraTreesClassifier (Extra Trees)
+- Logistic Regression (balanced, max_iter=2000, typical C≈0.5)
+- Calibration: per-fold isotonic or sigmoid; optional final calibration on full train for holdout
+
+Clinical combiner design (constrained)
+- From OOF per-model probabilities on CV folds, construct two sub-ensembles:
+  - E_sens: emphasizes sensitivity-oriented base models (e.g., strong LGBM/XGB + BRF)
+  - E_spec: emphasizes specificity-oriented base models (e.g., strong LGBM/XGB + ExtraTrees)
+- Combine sub-ensembles via alpha-weighted blending: p = alpha * E_sens + (1 - alpha) * E_spec
+  - Alpha grid searched on folds ∈ {0.0, 0.05, …, 1.0}
+  - Selection based on (#feasible folds that meet both targets, and surplus over targets)
+- Meta-combiner (optional): logistic regression (with calibration) trained leak-safely on OOF z_sens, z_spec, |z_sens - z_spec| to produce p_meta; selected vs alpha-blend if it yields better feasibility/surplus
+- Threshold selection per fold performed on the chosen combiner scores; median or quantile-mapped transfer for holdout
+
+Earlier approaches (before the constrained combiner rollout)
+- Advanced clinical modeling with polynomial feature expansion and conservative ExtraTreesClassifier; clinical soft-voting ensemble
+  - Robust cloning with sklearn.clone to prevent state leakage between folds
+  - Calibration per fold; spec-first threshold policy
+  - Result: No single model met Sens ≥ 0.86 and Spec ≥ 0.70 jointly on cross-validation; ensembles also fell short
+- Expanded sweeps: added logistic regression and SVM hyperparameter grids; per-fold sigmoid calibration; UMAP-based representation learning explored
+  - Summary outcome: Strong individual metrics but no consistent 
+    both-targets feasibility across CV; indicated need for richer features or more sophisticated architectures
+
+Key experiment artifacts and results (chronological highlights)
+
+A) Constrained combiner with UMAP (cosine) — broader model set (older run)
+- Command (representative):
+  ./venv/bin/python scripts/clinical_fair_pipeline.py \
+    --target-sens 0.86 --target-spec 0.70 \
+    --use-umap-cosine --umap-components 16 \
+    --calibration isotonic \
+    --models lgbm_grid,xgb_grid,extratrees,brf,logreg \
+    --out-name clinical_fair_combiner_umap.json
+- File: results/clinical_fair_combiner_umap.json
+- CV (means): Sens 0.790, Spec 0.820, AUC 0.834
+- Holdout @ median-CV threshold: Sens 0.818, Spec 0.619, AUC 0.798
+- Outcome: Close on sensitivity, under the specificity target on holdout
+
+B) Constrained combiner — UMAP 10, top-3 ensemble, no quantile transfer
+- File: results/clinical_fair_combiner_umap10_top3.json
+- CV (means): Sens 0.816, Spec 0.765, AUC 0.839
+- Holdout @ median-CV threshold: Sens 0.848, Spec 0.667, AUC 0.805, Threshold 0.492
+- Holdout (spec-first diagnostic): Sens 0.848, Spec 0.762, Threshold 0.5588
+- Combiner: best_alpha = 0.2
+- Outcome: Very close; strong Sensitivity on holdout, Specificity slightly below 0.70 at default, but spec-first policy can achieve Spec ≈ 0.76 at same sensitivity; still short of both-targets simultaneously
+
+C) Constrained combiner — UMAP 10, top-3 ensemble, quantile-mapped threshold transfer
+- File: results/clinical_fair_combiner_umap10_top3_quantile.json
+- CV (means): Sens 0.789, Spec 0.800, AUC 0.846; median CV tau ≈ 0.498
+- Holdout (quantile-mapped): Sens 0.727, Spec 0.667, AUC 0.786, Threshold ≈ 0.575
+- Holdout (spec-first diagnostic): Sens 0.667, Spec 0.714, Threshold ≈ 0.621
+- Combiner: best_alpha = 0.0
+- Outcome: Quantile transfer improved holdout specificity vs pre-quantile setup, but sensitivity dropped; both-targets unmet
+
+D) Constrained combiner — UMAP 16, top-2 ensemble, quantile-mapped threshold transfer [LATEST]
+- Command:
+  ./venv/bin/python scripts/clinical_fair_pipeline.py \
+    --target-sens 0.86 --target-spec 0.70 \
+    --use-umap-cosine --umap-components 16 --umap-neighbors 50 \
+    --calibration isotonic --final-calibration isotonic \
+    --models lgbm_grid,xgb_grid,brf,extratrees --top-k-models 2 \
+    --report-holdout-specfirst --use-quantile-threshold \
+    --out-name clinical_fair_combiner_umap16_top2_quantile.json
+- File: results/clinical_fair_combiner_umap16_top2_quantile.json
+- CV (means): Sens 0.788, Spec 0.807, AUC 0.840; median CV tau ≈ 0.521
+- Holdout (quantile-mapped): Sens 0.727, Spec 0.762, AUC 0.808, Threshold ≈ 0.613
+- Holdout (spec-first diagnostic): Sens 0.788, Spec 0.714, Threshold ≈ 0.571
+- Combiner: best_alpha = 0.0
+- Outcome: Best overall holdout trade-off so far (Spec ≈ 0.76 at Sens ≈ 0.73; highest holdout AUC among recent runs)
+
+E) Constrained combiner — GBM-only (LGBM+XGB) top-2, UMAP 10, quantile-mapped threshold transfer [LATEST]
+- Command:
+  ./venv/bin/python scripts/clinical_fair_pipeline.py \
+    --target-sens 0.86 --target-spec 0.70 \
+    --use-umap-cosine --umap-components 10 --umap-neighbors 50 \
+    --calibration isotonic --final-calibration sigmoid \
+    --models lgbm_grid,xgb_grid --top-k-models 2 \
+    --report-holdout-specfirst --use-quantile-threshold \
+    --out-name clinical_fair_combiner_umap10_lgbm_xgb_top2_quantile.json
+- File: results/clinical_fair_combiner_umap10_lgbm_xgb_top2_quantile.json
+- CV (means): Sens 0.789, Spec 0.800, AUC 0.847; median CV tau ≈ 0.497
+- Holdout (quantile-mapped): Sens 0.697, Spec 0.714, AUC 0.759, Threshold ≈ 0.613
+- Holdout (spec-first diagnostic): Sens 0.697, Spec 0.714, Threshold ≈ 0.616
+- Combiner: best_alpha = 0.0
+- Outcome: Lower holdout AUC and metrics than D; variance reduction via GBM-only did not translate to better holdout trade-off
+
+F) Constrained combiner — Polynomial features (deg=2), top-3, quantile-mapped threshold transfer [LATEST]
+- Command:
+  ./venv/bin/python scripts/clinical_fair_pipeline.py \
+    --target-sens 0.86 --target-spec 0.70 \
+    --use-polynomial \
+    --calibration isotonic --final-calibration sigmoid \
+    --models lgbm_grid,xgb_grid,brf,extratrees --top-k-models 3 \
+    --report-holdout-specfirst --use-quantile-threshold \
+    --out-name clinical_fair_combiner_poly_top3_quantile.json
+- File: results/clinical_fair_combiner_poly_top3_quantile.json
+- CV (means): Sens 0.763, Spec 0.817, AUC 0.800; median CV tau ≈ 0.490
+- Holdout (quantile-mapped): Sens 0.636, Spec 0.762, AUC 0.784, Threshold ≈ 0.676
+- Holdout (spec-first diagnostic): Sens 0.727, Spec 0.762, Threshold ≈ 0.660
+- Combiner: best_alpha = 0.0
+- Outcome: Specificity similar to D, but with substantially lower sensitivity; UMAP-based representations appear more favorable than pure polynomial features here
+
+Cross-cutting observations
+- CV vs holdout gap: Consistent CV strength does not always transfer to holdout—suggesting distributional differences and/or calibration/threshold transfer instability. Quantile-mapped thresholds improved holdout specificity in several cases but often at the expense of sensitivity.
+- Best current trade-off: UMAP 16 + top-2 ensemble (D) yields holdout Sens ≈ 0.73 and Spec ≈ 0.76 (AUC ≈ 0.81). Still below clinical Sens target of 0.86.
+- Combiner behavior: best_alpha frequently resolves to 0.0, favoring the specificity-oriented sub-ensemble on CV. Meta-combiner can be activated, but current feasibility/surplus selection often prefers alpha-blend with alpha=0.0.
+- Representation: UMAP with moderate component counts (10–16) tends to outperform polynomial-only expansions in this setting.
+- Feature engineering: Ratio features and quantile bins provide useful inductive bias; additional domain-derived features may help close the sensitivity gap at acceptable specificity.
+
+Actionable next steps (suggested)
+- Threshold robustness:
+  - Multi-seed evaluation for CV and quantile-threshold transfer to measure variability and select more robust thresholds
+  - Consider percentile-interval mapping (e.g., interquartile band) and choose conservative threshold within band
+- Ensemble refinement:
+  - Start from D (UMAP 16 + top-2); test top-k ∈ {2,3} and adjust final calibration (sigmoid vs isotonic) to nudge sensitivity up while maintaining Spec ≥ 0.70
+  - Explore meta-combiner preference explicitly (force meta vs alpha) to evaluate potential gains
+- Feature augmentation:
+  - Add additional domain ratios, temporal stability measures, and per-child variability statistics
+  - Evaluate monotonic constraints for LightGBM if clinical intuition dictates monotone relationships
+- Distribution shift diagnostics:
+  - Plot CV vs holdout score distributions, calibration curves, and ROC/PR per run; perform per-child error analysis to detect subpopulation effects
+- Data enrichment:
+  - If feasible, incorporate richer multi-modal signals to boost separability while preserving clinical specificity requirements
+
+Artifact index (files referenced)
+- results/clinical_fair_combiner_umap.json
+- results/clinical_fair_combiner_umap10_top3.json
+- results/clinical_fair_combiner_umap10_top3_quantile.json
+- results/clinical_fair_combiner_umap16_top2_quantile.json
+- results/clinical_fair_combiner_umap10_lgbm_xgb_top2_quantile.json
+- results/clinical_fair_combiner_poly_top3_quantile.json
+
+Current recommendation
+- Use the UMAP 16, top-2, quantile-threshold configuration (results/clinical_fair_combiner_umap16_top2_quantile.json) as the working candidate while iterating on the next steps above to attempt to reach Sens ≥ 0.86 at Spec ≥ 0.70 on holdout.
+

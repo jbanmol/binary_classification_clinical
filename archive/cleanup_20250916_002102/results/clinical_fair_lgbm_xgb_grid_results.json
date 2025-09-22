@@ -1,0 +1,109 @@
+{
+  "policy": "clinical-both-targets",
+  "targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.7
+  },
+  "models": [
+    "lgbm_mc20_ff0.6_spw0.75",
+    "lgbm_mc20_ff0.6_spw1.0",
+    "lgbm_mc20_ff0.6_spw1.25",
+    "lgbm_mc20_ff0.8_spw0.75",
+    "lgbm_mc20_ff0.8_spw1.0",
+    "lgbm_mc20_ff0.8_spw1.25",
+    "lgbm_mc40_ff0.6_spw0.75",
+    "lgbm_mc40_ff0.6_spw1.0",
+    "lgbm_mc40_ff0.6_spw1.25",
+    "lgbm_mc40_ff0.8_spw0.75",
+    "lgbm_mc40_ff0.8_spw1.0",
+    "lgbm_mc40_ff0.8_spw1.25",
+    "lgbm_mc60_ff0.6_spw0.75",
+    "lgbm_mc60_ff0.6_spw1.0",
+    "lgbm_mc60_ff0.6_spw1.25",
+    "lgbm_mc60_ff0.8_spw0.75",
+    "lgbm_mc60_ff0.8_spw1.0",
+    "lgbm_mc60_ff0.8_spw1.25",
+    "xgb_md3_mcw1_spw0.75",
+    "xgb_md3_mcw1_spw1.0",
+    "xgb_md3_mcw1_spw1.25",
+    "xgb_md3_mcw3_spw0.75",
+    "xgb_md3_mcw3_spw1.0",
+    "xgb_md3_mcw3_spw1.25",
+    "xgb_md3_mcw5_spw0.75",
+    "xgb_md3_mcw5_spw1.0",
+    "xgb_md3_mcw5_spw1.25",
+    "xgb_md4_mcw1_spw0.75",
+    "xgb_md4_mcw1_spw1.0",
+    "xgb_md4_mcw1_spw1.25",
+    "xgb_md4_mcw3_spw0.75",
+    "xgb_md4_mcw3_spw1.0",
+    "xgb_md4_mcw3_spw1.25",
+    "xgb_md4_mcw5_spw0.75",
+    "xgb_md4_mcw5_spw1.0",
+    "xgb_md4_mcw5_spw1.25",
+    "xgb_md5_mcw1_spw0.75",
+    "xgb_md5_mcw1_spw1.0",
+    "xgb_md5_mcw1_spw1.25",
+    "xgb_md5_mcw3_spw0.75",
+    "xgb_md5_mcw3_spw1.0",
+    "xgb_md5_mcw3_spw1.25",
+    "xgb_md5_mcw5_spw0.75",
+    "xgb_md5_mcw5_spw1.0",
+    "xgb_md5_mcw5_spw1.25",
+    "extratrees",
+    "brf",
+    "logreg"
+  ],
+  "use_polynomial": true,
+  "calibration": "isotonic",
+  "cv": {
+    "folds": [
+      {
+        "fold": 1,
+        "threshold": 0.44308329229294974,
+        "sensitivity": 0.8888888888888888,
+        "specificity": 0.8235294117647058,
+        "auc": 0.9193899782135075
+      },
+      {
+        "fold": 2,
+        "threshold": 0.4605703654639408,
+        "sensitivity": 0.8461538461538461,
+        "specificity": 0.7647058823529411,
+        "auc": 0.8800904977375565
+      },
+      {
+        "fold": 3,
+        "threshold": 0.5527539788167944,
+        "sensitivity": 0.8260869565217391,
+        "specificity": 0.7,
+        "auc": 0.7760869565217391
+      },
+      {
+        "fold": 4,
+        "threshold": 0.5222481841354227,
+        "sensitivity": 0.875,
+        "specificity": 0.9473684210526316,
+        "auc": 0.918859649122807
+      },
+      {
+        "fold": 5,
+        "threshold": 0.6267564439429713,
+        "sensitivity": 0.5925925925925926,
+        "specificity": 0.75,
+        "auc": 0.6574074074074074
+      }
+    ],
+    "threshold_median": 0.5222481841354227,
+    "sensitivity_mean": 0.8057444568314134,
+    "specificity_mean": 0.7971207430340558,
+    "auc_mean": 0.8303668978006036
+  },
+  "holdout": {
+    "sensitivity": 0.7878787878787878,
+    "specificity": 0.6190476190476191,
+    "auc": 0.8196248196248196,
+    "threshold": 0.5222481841354227,
+    "meets_targets": false
+  }
+}

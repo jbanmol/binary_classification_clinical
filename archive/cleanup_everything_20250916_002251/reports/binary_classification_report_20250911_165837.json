@@ -1,0 +1,19 @@
+{
+  "project_info": {
+    "name": "ASD vs TD Binary Classification",
+    "description": "Coloring game behavioral analysis for autism classification",
+    "generated_at": "2025-09-11T16:58:37.155188",
+    "completed_phases": []
+  },
+  "data_summary": {},
+  "feature_analysis": {},
+  "model_performance": {},
+  "project_state": {
+    "current_phase": "results_reporting",
+    "completed_phases": [],
+    "data_summary": {},
+    "feature_recommendations": {},
+    "model_results": {},
+    "deployment_status": "not_deployed"
+  }
+}

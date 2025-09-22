@@ -1,0 +1,33 @@
+# RAG + MCP Agent System Dependencies
+
+# Core dependencies
+pandas>=1.3.0
+numpy>=1.21.0
+python-dotenv>=0.19.0
+
+# RAG Agent dependencies (free/open-source only)
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+# No paid APIs - using only free local models
+
+# MCP Agent dependencies  
+mlflow>=2.0.0
+scikit-learn>=1.0.0
+
+# Utility dependencies
+pathlib2>=2.3.0; python_version < '3.4'
+typing-extensions>=4.0.0
+
+# Optional: For advanced embeddings
+torch>=1.9.0
+transformers>=4.21.0
+
+# Optional: For better text processing
+spacy>=3.4.0
+nltk>=3.7
+
+# Development and testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+black>=22.0.0
+flake8>=5.0.0

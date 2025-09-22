@@ -1,0 +1,992 @@
+{
+  "research_insights": {
+    "What are the most discriminative behavioral features for ASD vs TD classification?": {
+      "query": "What are the most discriminative behavioral features for ASD vs TD classification?",
+      "total_results": 20,
+      "label_distribution": {
+        "ASD": 20,
+        "TD": 0
+      },
+      "most_relevant_patterns": [
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 4467.01 with variability 2848.17. Used 8 fingers with 0.7% palm touches. Touched 8 different zones, completing 98.4% of task. Tremor indicator: 0.117. Session lasted 38.3s with 26 strokes.",
+        "Child 620dd1535c06161b4212417f (ASD) showed average movement velocity of 924.53 with variability 1125.12. Used 5 fingers with 4.2% palm touches. Touched 6 different zones, completing 79.3% of task. Tremor indicator: 0.053. Session lasted 84.1s with 76 strokes.",
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 3014.65 with variability 1864.26. Used 2 fingers with 0.4% palm touches. Touched 6 different zones, completing 92.4% of task. Tremor indicator: 0.060. Session lasted 46.6s with 25 strokes.",
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 3069.14 with variability 1641.40. Used 2 fingers with 0.3% palm touches. Touched 6 different zones, completing 91.6% of task. Tremor indicator: 0.048. Session lasted 59.7s with 32 strokes.",
+        "Child 61de7c1e1d8fbe7027c45abe (ASD) showed average movement velocity of 2956.23 with variability 2518.26. Used 5 fingers with 3.3% palm touches. Touched 8 different zones, completing 90.2% of task. Tremor indicator: 0.005. Session lasted 53.1s with 52 strokes."
+      ],
+      "feature_statistics": {
+        "velocity_std": {
+          "mean": 1538.9702738875528,
+          "std": 636.0121383285192,
+          "min": 552.4146539999762,
+          "max": 2848.1722352784345
+        },
+        "tremor_indicator": {
+          "mean": 0.04459786241182973,
+          "std": 0.08570558084590445,
+          "min": 0.0012145296394043075,
+          "max": 0.3982238167566901
+        },
+        "completion_progress_rate": {
+          "mean": 0.09363934331808334,
+          "std": 0.038876414307010075,
+          "min": 0.02521945762452107,
+          "max": 0.1533711053311793
+        },
+        "palm_touch_ratio": {
+          "mean": 0.01180020327452341,
+          "std": 0.01714102957392777,
+          "min": 0.0,
+          "max": 0.0708955223880597
+        },
+        "unique_fingers": {
+          "mean": 4.7,
+          "std": 3.4942810419312296,
+          "min": "1",
+          "max": "15"
+        },
+        "total_touch_points": {
+          "mean": 1207.6,
+          "std": 653.4101621493195,
+          "min": "610",
+          "max": "2610"
+        },
+        "max_finger_id": {
+          "mean": 4.25,
+          "std": 4.14578098794425,
+          "min": "0",
+          "max": "14"
+        },
+        "stroke_count": {
+          "mean": 39.25,
+          "std": 28.37406386120959,
+          "min": "6",
+          "max": "129"
+        },
+        "unique_colors": {
+          "mean": 2.55,
+          "std": 1.5960889699512368,
+          "min": "1",
+          "max": "7"
+        },
+        "velocity_mean": {
+          "mean": 1736.3021379876511,
+          "std": 1082.3548673615671,
+          "min": 400.00243292308926,
+          "max": 4467.011095025857
+        },
+        "velocity_cv": {
+          "mean": 1.0572340693748914,
+          "std": 0.367987268369599,
+          "min": 0.5348076412310482,
+          "max": 1.876373092866712
+        },
+        "velocity_max": {
+          "mean": 15697.447388034398,
+          "std": 8737.188416187208,
+          "min": 5041.708145496833,
+          "max": 35855.141631928745
+        },
+        "final_completion": {
+          "mean": 89.815286155,
+          "std": 7.143671985108749,
+          "min": 65.8227844,
+          "max": 98.91304
+        },
+        "session_duration": {
+          "mean": 68.49727695000009,
+          "std": 30.566117514658778,
+          "min": 29.894065999999995,
+          "max": 123.9014500000003
+        },
+        "avg_time_between_points": {
+          "mean": 0.06081192130446169,
+          "std": 0.020485704089930962,
+          "min": 0.04157728233657858,
+          "max": 0.12549508955223937
+        },
+        "acc_magnitude_std": {
+          "mean": 0.04459786241182973,
+          "std": 0.08570558084590445,
+          "min": 0.0012145296394043075,
+          "max": 0.3982238167566901
+        },
+        "unique_zones": {
+          "mean": 6.65,
+          "std": 0.9096702699330126,
+          "min": "6",
+          "max": "8"
+        },
+        "canceled_touches": {
+          "mean": 12.0,
+          "std": 16.727223320085137,
+          "min": "0",
+          "max": "76"
+        },
+        "acc_magnitude_mean": {
+          "mean": 0.9948441563948875,
+          "std": 0.014300242371852801,
+          "min": 0.9896725586168552,
+          "max": 1.0568523161491632
+        }
+      },
+      "average_similarity": -0.46847186684608455,
+      "research_insights": []
+    },
+    "How do touch dynamics differ between diagnostic groups during coloring tasks?": {
+      "query": "How do touch dynamics differ between diagnostic groups during coloring tasks?",
+      "total_results": 20,
+      "label_distribution": {
+        "ASD": 6,
+        "TD": 14
+      },
+      "most_relevant_patterns": [
+        "Child 64ce083d86788e8225424615 (ASD) showed average movement velocity of 1731.62 with variability 1570.45. Used 3 fingers with 0.1% palm touches. Touched 6 different zones, completing 100.4% of task. Tremor indicator: 0.021. Session lasted 98.5s with 12 strokes.",
+        "Child 625e4dbc86788e02b0423e58 (TD) showed average movement velocity of 1002.55 with variability 900.63. Used 2 fingers with 0.0% palm touches. Touched 5 different zones, completing 92.8% of task. Tremor indicator: 0.026. Session lasted 74.8s with 15 strokes.",
+        "Child 649bd86d86788eb7514245ce (TD) showed average movement velocity of 1662.87 with variability 1325.66. Used 3 fingers with 0.0% palm touches. Touched 5 different zones, completing 100.4% of task. Tremor indicator: 0.013. Session lasted 90.1s with 12 strokes.",
+        "Child 625e4dbc86788e02b0423e58 (TD) showed average movement velocity of 933.06 with variability 958.74. Used 1 fingers with 0.0% palm touches. Touched 6 different zones, completing 91.8% of task. Tremor indicator: 0.022. Session lasted 67.3s with 13 strokes.",
+        "Child 642bbb4a86788e2ee64244e1 (ASD) showed average movement velocity of 312.57 with variability 410.63. Used 4 fingers with 0.2% palm touches. Touched 9 different zones, completing 76.6% of task. Tremor indicator: 0.011. Session lasted 125.3s with 47 strokes."
+      ],
+      "feature_statistics": {
+        "velocity_mean": {
+          "mean": 1194.170299399279,
+          "std": 528.1187640002593,
+          "min": 312.56937378853644,
+          "max": 2220.702976956005
+        },
+        "avg_time_between_points": {
+          "mean": 0.06782748903912007,
+          "std": 0.05174397147492241,
+          "min": 0.03573536950998185,
+          "max": 0.2449494011976047
+        },
+        "total_touch_points": {
+          "mean": 1756.6,
+          "std": 822.1105400127163,
+          "min": "335",
+          "max": "3442"
+        },
+        "acc_magnitude_std": {
+          "mean": 0.015841471760877694,
+          "std": 0.010114725766254332,
+          "min": 0.0012057341536384331,
+          "max": 0.04447484206152663
+        },
+        "unique_colors": {
+          "mean": 3.9,
+          "std": 2.1886068628239292,
+          "min": "1",
+          "max": "8"
+        },
+        "acc_magnitude_mean": {
+          "mean": 0.9903998999558045,
+          "std": 0.0007582949082244839,
+          "min": 0.989042263512238,
+          "max": 0.9922655203190128
+        },
+        "stroke_count": {
+          "mean": 33.7,
+          "std": 32.219714461801175,
+          "min": "12",
+          "max": "128"
+        },
+        "max_finger_id": {
+          "mean": 1.6,
+          "std": 0.9695359714832659,
+          "min": "0",
+          "max": "4"
+        },
+        "session_duration": {
+          "mean": 91.7320359500001,
+          "std": 26.94853938347755,
+          "min": 43.51673000000005,
+          "max": 125.95510000000286
+        },
+        "final_completion": {
+          "mean": 88.87796385,
+          "std": 13.545304173356909,
+          "min": 51.086956,
+          "max": 100.591721
+        },
+        "unique_fingers": {
+          "mean": 2.6,
+          "std": 0.9695359714832659,
+          "min": "1",
+          "max": "5"
+        },
+        "velocity_cv": {
+          "mean": 1.053047911755179,
+          "std": 0.21344120298903882,
+          "min": 0.7972124961592326,
+          "max": 1.5917049192866182
+        },
+        "completion_progress_rate": {
+          "mean": 0.06285192986086383,
+          "std": 0.030032710898792656,
+          "min": 0.02922478820453225,
+          "max": 0.15249837611940298
+        },
+        "velocity_std": {
+          "mean": 1207.9378895434265,
+          "std": 543.857047711142,
+          "min": 398.6776074416481,
+          "max": 2581.713937430938
+        },
+        "palm_touch_ratio": {
+          "mean": 0.0018805556952646088,
+          "std": 0.0017951648392481262,
+          "min": 0.0,
+          "max": 0.007042253521126761
+        },
+        "tremor_indicator": {
+          "mean": 0.015841471760877694,
+          "std": 0.010114725766254332,
+          "min": 0.0012057341536384331,
+          "max": 0.04447484206152663
+        },
+        "unique_zones": {
+          "mean": 6.6,
+          "std": 1.2,
+          "min": "5",
+          "max": "9"
+        },
+        "canceled_touches": {
+          "mean": 3.25,
+          "std": 3.476708213238494,
+          "min": "0",
+          "max": "11"
+        },
+        "velocity_max": {
+          "mean": 9368.32539194761,
+          "std": 5165.456789579452,
+          "min": 2949.914657993595,
+          "max": 23381.022693855357
+        }
+      },
+      "average_similarity": -0.4625015199184417,
+      "research_insights": [
+        "ASD group shows 24.9% lower velocity mean compared to TD group",
+        "ASD group shows 19.4% lower velocity std compared to TD group",
+        "ASD group shows 17.4% lower tremor indicator compared to TD group",
+        "ASD group shows 38.6% lower palm touch ratio compared to TD group",
+        "TD group shows better task completion (76.8% vs 94.0%)"
+      ]
+    },
+    "What motor control patterns are characteristic of ASD children?": {
+      "query": "What motor control patterns are characteristic of ASD children?",
+      "total_results": 20,
+      "label_distribution": {
+        "ASD": 20,
+        "TD": 0
+      },
+      "most_relevant_patterns": [
+        "Child 623d58a186788e1162423cbb (ASD) showed average movement velocity of 400.00 with variability 552.41. Used 3 fingers with 0.2% palm touches. Touched 6 different zones, completing 65.8% of task. Tremor indicator: 0.016. Session lasted 119.8s with 31 strokes.",
+        "Child 620dd1535c06161b4212417f (ASD) showed average movement velocity of 924.53 with variability 1125.12. Used 5 fingers with 4.2% palm touches. Touched 6 different zones, completing 79.3% of task. Tremor indicator: 0.053. Session lasted 84.1s with 76 strokes.",
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 3014.65 with variability 1864.26. Used 2 fingers with 0.4% palm touches. Touched 6 different zones, completing 92.4% of task. Tremor indicator: 0.060. Session lasted 46.6s with 25 strokes.",
+        "Child 635f646686788e5c384241fa (ASD) showed average movement velocity of 2540.49 with variability 1946.02. Used 3 fingers with 0.1% palm touches. Touched 8 different zones, completing 97.8% of task. Tremor indicator: 0.019. Session lasted 36.4s with 9 strokes.",
+        "Child 6346453886788edc414241c1 (ASD) showed average movement velocity of 2137.71 with variability 1508.05. Used 2 fingers with 0.0% palm touches. Touched 6 different zones, completing 94.9% of task. Tremor indicator: 0.017. Session lasted 33.4s with 6 strokes."
+      ],
+      "feature_statistics": {
+        "stroke_count": {
+          "mean": 34.75,
+          "std": 28.358199872347328,
+          "min": "6",
+          "max": "129"
+        },
+        "total_touch_points": {
+          "mean": 1275.05,
+          "std": 658.0380289162626,
+          "min": "582",
+          "max": "2610"
+        },
+        "palm_touch_ratio": {
+          "mean": 0.008651543536781403,
+          "std": 0.016727035627662083,
+          "min": 0.0,
+          "max": 0.0708955223880597
+        },
+        "max_finger_id": {
+          "mean": 2.7,
+          "std": 3.018277654557314,
+          "min": "0",
+          "max": "14"
+        },
+        "velocity_std": {
+          "mean": 1389.935196186955,
+          "std": 586.3478471505706,
+          "min": 552.4146539999762,
+          "max": 2848.1722352784345
+        },
+        "final_completion": {
+          "mean": 90.227252355,
+          "std": 7.448084839491023,
+          "min": 65.8227844,
+          "max": 100.421944
+        },
+        "completion_progress_rate": {
+          "mean": 0.08935651587085054,
+          "std": 0.039104436134824554,
+          "min": 0.02521945762452107,
+          "max": 0.15877158075601375
+        },
+        "unique_fingers": {
+          "mean": 3.7,
+          "std": 3.018277654557314,
+          "min": "1",
+          "max": "15"
+        },
+        "acc_magnitude_mean": {
+          "mean": 0.9950414552340113,
+          "std": 0.014248941224460377,
+          "min": 0.9897850104236467,
+          "max": 1.0568523161491632
+        },
+        "unique_colors": {
+          "mean": 2.85,
+          "std": 1.6209565077447325,
+          "min": "1",
+          "max": "7"
+        },
+        "velocity_cv": {
+          "mean": 1.053613498101318,
+          "std": 0.37069415555675894,
+          "min": 0.5348076412310482,
+          "max": 1.876373092866712
+        },
+        "velocity_max": {
+          "mean": 12586.86582565992,
+          "std": 7387.875746281264,
+          "min": 5041.708145496833,
+          "max": 35855.141631928745
+        },
+        "velocity_mean": {
+          "mean": 1605.725376446148,
+          "std": 1072.1262780761217,
+          "min": 400.00243292308926,
+          "max": 4467.011095025857
+        },
+        "canceled_touches": {
+          "mean": 9.8,
+          "std": 16.933989488599547,
+          "min": "0",
+          "max": "76"
+        },
+        "tremor_indicator": {
+          "mean": 0.04758971307309907,
+          "std": 0.08472702727224916,
+          "min": 0.000747782051570748,
+          "max": 0.3982238167566901
+        },
+        "avg_time_between_points": {
+          "mean": 0.05959503214332702,
+          "std": 0.019312897724188594,
+          "min": 0.04208073626373684,
+          "max": 0.12549508955223937
+        },
+        "session_duration": {
+          "mean": 71.58302345000007,
+          "std": 31.02339492624199,
+          "min": 31.04777200000001,
+          "max": 123.9014500000003
+        },
+        "unique_zones": {
+          "mean": 6.75,
+          "std": 0.9420721840708386,
+          "min": "6",
+          "max": "8"
+        },
+        "acc_magnitude_std": {
+          "mean": 0.04758971307309907,
+          "std": 0.08472702727224916,
+          "min": 0.000747782051570748,
+          "max": 0.3982238167566901
+        }
+      },
+      "average_similarity": 0.13222036063671117,
+      "research_insights": []
+    },
+    "How does task completion and planning differ between ASD and TD groups?": {
+      "query": "How does task completion and planning differ between ASD and TD groups?",
+      "total_results": 20,
+      "label_distribution": {
+        "ASD": 20,
+        "TD": 0
+      },
+      "most_relevant_patterns": [
+        "Child 623d58a186788e1162423cbb (ASD) showed average movement velocity of 400.00 with variability 552.41. Used 3 fingers with 0.2% palm touches. Touched 6 different zones, completing 65.8% of task. Tremor indicator: 0.016. Session lasted 119.8s with 31 strokes.",
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 3014.65 with variability 1864.26. Used 2 fingers with 0.4% palm touches. Touched 6 different zones, completing 92.4% of task. Tremor indicator: 0.060. Session lasted 46.6s with 25 strokes.",
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 3069.14 with variability 1641.40. Used 2 fingers with 0.3% palm touches. Touched 6 different zones, completing 91.6% of task. Tremor indicator: 0.048. Session lasted 59.7s with 32 strokes.",
+        "Child 625e580686788e50f6423e5a (ASD) showed average movement velocity of 835.26 with variability 939.10. Used 7 fingers with 0.6% palm touches. Touched 6 different zones, completing 89.0% of task. Tremor indicator: 0.012. Session lasted 122.9s with 64 strokes.",
+        "Child 61dfacd11d8fbed60ec45ae5 (ASD) showed average movement velocity of 4467.01 with variability 2848.17. Used 8 fingers with 0.7% palm touches. Touched 8 different zones, completing 98.4% of task. Tremor indicator: 0.117. Session lasted 38.3s with 26 strokes."
+      ],
+      "feature_statistics": {
+        "final_completion": {
+          "mean": 87.12162899999998,
+          "std": 10.063362044223645,
+          "min": 60.3375549,
+          "max": 100.543472
+        },
+        "tremor_indicator": {
+          "mean": 0.029108754676769138,
+          "std": 0.026478329929154946,
+          "min": 0.0021980321320241307,
+          "max": 0.11713207698068837
+        },
+        "total_touch_points": {
+          "mean": 1636.3,
+          "std": 710.5056720392878,
+          "min": "619",
+          "max": "2671"
+        },
+        "avg_time_between_points": {
+          "mean": 0.056222929285285314,
+          "std": 0.010255727430591522,
+          "min": 0.04208073626373684,
+          "max": 0.0766877763496144
+        },
+        "unique_colors": {
+          "mean": 3.75,
+          "std": 2.165063509461097,
+          "min": "1",
+          "max": "7"
+        },
+        "completion_progress_rate": {
+          "mean": 0.06837701026249679,
+          "std": 0.037828855600379005,
+          "min": 0.02521945762452107,
+          "max": 0.1533711053311793
+        },
+        "unique_fingers": {
+          "mean": 3.15,
+          "std": 1.7965244223221681,
+          "min": "1",
+          "max": "8"
+        },
+        "unique_zones": {
+          "mean": 6.6,
+          "std": 0.8,
+          "min": "6",
+          "max": "8"
+        },
+        "velocity_std": {
+          "mean": 1226.4986697278941,
+          "std": 688.4719735823272,
+          "min": 366.5191464428864,
+          "max": 2848.1722352784345
+        },
+        "acc_magnitude_mean": {
+          "mean": 0.9917262865166029,
+          "std": 0.0012426139369562698,
+          "min": 0.9896681088072944,
+          "max": 0.9948084636007816
+        },
+        "velocity_max": {
+          "mean": 11657.310395536831,
+          "std": 7368.312825237108,
+          "min": 3200.590209509882,
+          "max": 35855.141631928745
+        },
+        "acc_magnitude_std": {
+          "mean": 0.029108754676769138,
+          "std": 0.026478329929154946,
+          "min": 0.0021980321320241307,
+          "max": 0.11713207698068837
+        },
+        "max_finger_id": {
+          "mean": 2.15,
+          "std": 1.7965244223221681,
+          "min": "0",
+          "max": "7"
+        },
+        "stroke_count": {
+          "mean": 42.2,
+          "std": 38.471547928306705,
+          "min": "6",
+          "max": "188"
+        },
+        "session_duration": {
+          "mean": 89.14554915000004,
+          "std": 34.44935300573406,
+          "min": 33.414024,
+          "max": 125.58799999999974
+        },
+        "canceled_touches": {
+          "mean": 6.55,
+          "std": 7.539728111808808,
+          "min": "0",
+          "max": "25"
+        },
+        "velocity_cv": {
+          "mean": 1.0399787255812138,
+          "std": 0.30267351099108875,
+          "min": 0.5348076412310482,
+          "max": 1.6413717474991878
+        },
+        "palm_touch_ratio": {
+          "mean": 0.0037588461115453677,
+          "std": 0.003556424019897938,
+          "min": 0.0,
+          "max": 0.013997760358342666
+        },
+        "velocity_mean": {
+          "mean": 1429.5964960089589,
+          "std": 1124.521460801202,
+          "min": 301.31606397215137,
+          "max": 4467.011095025857
+        }
+      },
+      "average_similarity": -0.7039309799671174,
+      "research_insights": []
+    },
+    "What role do palm touches and multi-touch patterns play in classification?": {
+      "query": "What role do palm touches and multi-touch patterns play in classification?",
+      "total_results": 20,
+      "label_distribution": {
+        "ASD": 0,
+        "TD": 20
+      },
+      "most_relevant_patterns": [
+        "Child 61bc24fe1d8fbe8a4fc453a7 (TD) showed average movement velocity of 737.80 with variability 743.09. Used 3 fingers with 0.2% palm touches. Touched 6 different zones, completing 72.2% of task. Tremor indicator: 0.014. Session lasted 123.0s with 32 strokes.",
+        "Child 649bd86d86788eb7514245ce (TD) showed average movement velocity of 1662.87 with variability 1325.66. Used 3 fingers with 0.0% palm touches. Touched 5 different zones, completing 100.4% of task. Tremor indicator: 0.013. Session lasted 90.1s with 12 strokes.",
+        "Child 61f8c8dd1d8fbe3afec45ca3 (TD) showed average movement velocity of 1680.31 with variability 1353.45. Used 3 fingers with 0.1% palm touches. Touched 6 different zones, completing 100.4% of task. Tremor indicator: 0.010. Session lasted 106.4s with 32 strokes.",
+        "Child 648d42c486788eaf8f424575 (TD) showed average movement velocity of 1053.77 with variability 1204.05. Used 3 fingers with 0.3% palm touches. Touched 7 different zones, completing 91.6% of task. Tremor indicator: 0.015. Session lasted 102.2s with 24 strokes.",
+        "Child 61bc24fe1d8fbe8a4fc453a7 (TD) showed average movement velocity of 760.52 with variability 795.41. Used 3 fingers with 0.3% palm touches. Touched 6 different zones, completing 74.3% of task. Tremor indicator: 0.017. Session lasted 117.1s with 41 strokes."
+      ],
+      "feature_statistics": {
+        "velocity_max": {
+          "mean": 13816.346500309102,
+          "std": 11717.960148820295,
+          "min": 3888.108389570723,
+          "max": 52974.58862795021
+        },
+        "max_finger_id": {
+          "mean": 3.25,
+          "std": 2.754541704167864,
+          "min": "1",
+          "max": "11"
+        },
+        "session_duration": {
+          "mean": 95.02518269999997,
+          "std": 24.078636458850934,
+          "min": 52.080079999999725,
+          "max": 135.06437000000005
+        },
+        "acc_magnitude_std": {
+          "mean": 0.02356697356056589,
+          "std": 0.0198056431299052,
+          "min": 0.0007764124973207066,
+          "max": 0.092950479104253
+        },
+        "stroke_count": {
+          "mean": 33.75,
+          "std": 13.593656608874596,
+          "min": "12",
+          "max": "64"
+        },
+        "palm_touch_ratio": {
+          "mean": 0.0038752698087726268,
+          "std": 0.002661924960090146,
+          "min": 0.000441306266548985,
+          "max": 0.012747875354107648
+        },
+        "unique_fingers": {
+          "mean": 3.65,
+          "std": 1.458595214581482,
+          "min": "2",
+          "max": "7"
+        },
+        "avg_time_between_points": {
+          "mean": 0.06086368060976619,
+          "std": 0.032960986168999666,
+          "min": 0.03604671559633029,
+          "max": 0.1928660634920641
+        },
+        "canceled_touches": {
+          "mean": 6.2,
+          "std": 3.2649655434629015,
+          "min": "1",
+          "max": "10"
+        },
+        "unique_colors": {
+          "mean": 3.85,
+          "std": 1.7109938632268673,
+          "min": "1",
+          "max": "7"
+        },
+        "completion_progress_rate": {
+          "mean": 0.055213538656173324,
+          "std": 0.025474997499802445,
+          "min": 0.027251964880733944,
+          "max": 0.13625446175637393
+        },
+        "acc_magnitude_mean": {
+          "mean": 0.9913948867643503,
+          "std": 0.002129156020619552,
+          "min": 0.9890699954046762,
+          "max": 0.999728880133098
+        },
+        "final_completion": {
+          "mean": 85.58727771499998,
+          "std": 17.229459228803215,
+          "min": 27.8481,
+          "max": 100.421944
+        },
+        "total_touch_points": {
+          "mean": 1830.2,
+          "std": 711.6332341873867,
+          "min": "316",
+          "max": "2726"
+        },
+        "tremor_indicator": {
+          "mean": 0.02356697356056589,
+          "std": 0.0198056431299052,
+          "min": 0.0007764124973207066,
+          "max": 0.092950479104253
+        },
+        "velocity_cv": {
+          "mean": 1.0734931839735171,
+          "std": 0.19121223769645324,
+          "min": 0.7972124961592326,
+          "max": 1.4667894902361662
+        },
+        "velocity_mean": {
+          "mean": 1205.4431525378163,
+          "std": 452.91386161068925,
+          "min": 442.0566628138602,
+          "max": 2300.808907233664
+        },
+        "velocity_std": {
+          "mean": 1268.4070936596768,
+          "std": 489.06479767856723,
+          "min": 610.2349952467171,
+          "max": 2581.713937430938
+        },
+        "unique_zones": {
+          "mean": 6.65,
+          "std": 1.194780314534852,
+          "min": "5",
+          "max": "9"
+        }
+      },
+      "average_similarity": -0.3767610192298889,
+      "research_insights": []
+    }
+  },
+  "statistical_summary": {
+    "descriptive_statistics": {
+      "stroke_count": {
+        "count": 823.0,
+        "mean": 37.57351154313487,
+        "std": 30.80642218552881,
+        "min": 1.0,
+        "25%": 17.0,
+        "50%": 28.0,
+        "75%": 49.0,
+        "max": 210.0
+      },
+      "total_touch_points": {
+        "count": 823.0,
+        "mean": 1789.4143377885785,
+        "std": 933.6910022732635,
+        "min": 4.0,
+        "25%": 1117.0,
+        "50%": 1668.0,
+        "75%": 2381.0,
+        "max": 5424.0
+      },
+      "unique_zones": {
+        "count": 823.0,
+        "mean": 6.545565006075334,
+        "std": 1.1568274597452513,
+        "min": 1.0,
+        "25%": 6.0,
+        "50%": 6.0,
+        "75%": 7.0,
+        "max": 9.0
+      },
+      "unique_colors": {
+        "count": 823.0,
+        "mean": 3.6196840826245444,
+        "std": 1.9097525087299514,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 5.0,
+        "max": 8.0
+      },
+      "session_duration": {
+        "count": 823.0,
+        "mean": 90.8455336283475,
+        "std": 35.38194703985316,
+        "min": 0.10010000000011132,
+        "25%": 63.58092499999975,
+        "50%": 89.69138000000021,
+        "75%": 119.50735000000077,
+        "max": 267.8810000000012
+      },
+      "avg_time_between_points": {
+        "count": 823.0,
+        "mean": 0.07657157787680015,
+        "std": 0.16284903643975698,
+        "min": 0.017582487821380246,
+        "25%": 0.04129071328480232,
+        "50%": 0.04738926949654487,
+        "75%": 0.059147596528210014,
+        "max": 3.5808715714285717
+      },
+      "velocity_mean": {
+        "count": 823.0,
+        "mean": 1447.737992010055,
+        "std": 812.9906118773434,
+        "min": 0.0,
+        "25%": 884.577966978903,
+        "50%": 1234.8070124560659,
+        "75%": 1845.3132635094748,
+        "max": 4719.965480846649
+      },
+      "velocity_std": {
+        "count": 823.0,
+        "mean": 1492.6274818553711,
+        "std": 843.4183077972301,
+        "min": 0.0,
+        "25%": 897.2616038277083,
+        "50%": 1270.1019868605847,
+        "75%": 1938.0460939242407,
+        "max": 9543.408779219835
+      },
+      "velocity_max": {
+        "count": 823.0,
+        "mean": 15731.380008512207,
+        "std": 17097.05150518334,
+        "min": 0.0,
+        "25%": 6988.069823878881,
+        "50%": 11452.320580750906,
+        "75%": 19788.014064642317,
+        "max": 304929.55608694983
+      },
+      "velocity_cv": {
+        "count": 823.0,
+        "mean": 1.1069926026254449,
+        "std": 0.48091094878832313,
+        "min": 0.0,
+        "25%": 0.8867157418510083,
+        "50%": 0.9912396342609592,
+        "75%": 1.1753817471239074,
+        "max": 5.8309518948453025
+      },
+      "max_finger_id": {
+        "count": 823.0,
+        "mean": 3.0097205346294045,
+        "std": 4.75045422795818,
+        "min": 0.0,
+        "25%": 1.0,
+        "50%": 2.0,
+        "75%": 3.0,
+        "max": 84.0
+      },
+      "unique_fingers": {
+        "count": 823.0,
+        "mean": 3.8371810449574726,
+        "std": 4.336539464316797,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 85.0
+      },
+      "canceled_touches": {
+        "count": 823.0,
+        "mean": 7.814094775212637,
+        "std": 12.610511801996049,
+        "min": 0.0,
+        "25%": 2.0,
+        "50%": 4.0,
+        "75%": 8.0,
+        "max": 142.0
+      },
+      "palm_touch_ratio": {
+        "count": 823.0,
+        "mean": 0.006293421514984759,
+        "std": 0.013051978950878123,
+        "min": 0.0,
+        "25%": 0.0009099211208506065,
+        "50%": 0.002285714285714286,
+        "75%": 0.0055953880852672964,
+        "max": 0.15318230852211434
+      },
+      "acc_magnitude_mean": {
+        "count": 823.0,
+        "mean": 0.9914269231055849,
+        "std": 0.004634209579759637,
+        "min": 0.9733253800125964,
+        "25%": 0.9900896399459058,
+        "50%": 0.9906967272149182,
+        "75%": 0.9914219272314919,
+        "max": 1.0568523161491632
+      },
+      "acc_magnitude_std": {
+        "count": 823.0,
+        "mean": 0.02238003346615751,
+        "std": 0.03294998035783913,
+        "min": 0.0005596385171447765,
+        "25%": 0.005669990623631441,
+        "50%": 0.014104217040706921,
+        "75%": 0.026197921379036863,
+        "max": 0.39822381675669005
+      },
+      "tremor_indicator": {
+        "count": 823.0,
+        "mean": 0.02238003346615751,
+        "std": 0.03294998035783913,
+        "min": 0.0005596385171447765,
+        "25%": 0.005669990623631441,
+        "50%": 0.014104217040706921,
+        "75%": 0.026197921379036863,
+        "max": 0.39822381675669005
+      },
+      "final_completion": {
+        "count": 823.0,
+        "mean": 89.4186586951215,
+        "std": 18.398743548489595,
+        "min": 0.0,
+        "25%": 90.7173,
+        "50%": 94.5652161,
+        "75%": 100.0,
+        "max": 100.591721
+      },
+      "completion_progress_rate": {
+        "count": 823.0,
+        "mean": 0.06430782251151013,
+        "std": 0.036685376379908645,
+        "min": 0.0,
+        "25%": 0.03866475934076749,
+        "50%": 0.055375311273135164,
+        "75%": 0.07961235029325586,
+        "max": 0.27199497685950413
+      }
+    },
+    "correlations_with_label": {
+      "stroke_count": -0.1687414960742433,
+      "total_touch_points": 0.3905094674318717,
+      "unique_zones": 0.018794292275166997,
+      "unique_colors": 0.07782070514094121,
+      "session_duration": 0.22996402641381616,
+      "avg_time_between_points": -0.14417035574039047,
+      "velocity_mean": -0.3193713506027562,
+      "velocity_std": -0.3689207078760977,
+      "velocity_max": -0.14970390666306835,
+      "velocity_cv": -0.14954635560506885,
+      "max_finger_id": -0.07674439313461408,
+      "unique_fingers": -0.09170405182675676,
+      "canceled_touches": -0.203191357708927,
+      "palm_touch_ratio": -0.2470601699295646,
+      "acc_magnitude_mean": -0.1354560681354251,
+      "acc_magnitude_std": -0.13110899774637144,
+      "tremor_indicator": -0.13110899774637144,
+      "final_completion": 0.20565468326160807,
+      "completion_progress_rate": -0.3249015041392921
+    },
+    "group_comparisons": {
+      "stroke_count": {
+        "ASD_mean": 41.86707566462168,
+        "TD_mean": 31.2874251497006,
+        "difference_pct": 33.81438537783389
+      },
+      "total_touch_points": {
+        "ASD_mean": 1488.2597137014316,
+        "TD_mean": 2230.3263473053894,
+        "difference_pct": -33.27166154408298
+      },
+      "unique_zones": {
+        "ASD_mean": 6.52760736196319,
+        "TD_mean": 6.57185628742515,
+        "difference_pct": -0.673309389717296
+      },
+      "unique_colors": {
+        "ASD_mean": 3.496932515337423,
+        "TD_mean": 3.7994011976047903,
+        "difference_pct": -7.960956649117468
+      },
+      "session_duration": {
+        "ASD_mean": 84.12511344955008,
+        "TD_mean": 100.6847116745509,
+        "difference_pct": -16.4469838067644
+      },
+      "avg_time_between_points": {
+        "ASD_mean": 0.09596328120562787,
+        "TD_mean": 0.048180730787588284,
+        "difference_pct": 99.17356926090612
+      },
+      "velocity_mean": {
+        "ASD_mean": 1662.193043477641,
+        "TD_mean": 1133.7603867176913,
+        "difference_pct": 46.60884812617205
+      },
+      "velocity_std": {
+        "ASD_mean": 1749.6261378567092,
+        "TD_mean": 1116.3629825001187,
+        "difference_pct": 56.72556017025789
+      },
+      "velocity_max": {
+        "ASD_mean": 17845.40028663234,
+        "TD_mean": 12636.302415695607,
+        "difference_pct": 41.2232763950512
+      },
+      "velocity_cv": {
+        "ASD_mean": 1.1663938128894171,
+        "TD_mean": 1.020024962448551,
+        "difference_pct": 14.349536122087692
+      },
+      "max_finger_id": {
+        "ASD_mean": 3.310838445807771,
+        "TD_mean": 2.568862275449102,
+        "difference_pct": 28.883454650325813
+      },
+      "unique_fingers": {
+        "ASD_mean": 4.1656441717791415,
+        "TD_mean": 3.356287425149701,
+        "difference_pct": 24.114643476738017
+      },
+      "canceled_touches": {
+        "ASD_mean": 9.930470347648262,
+        "TD_mean": 4.7155688622754495,
+        "difference_pct": 110.58902197552503
+      },
+      "palm_touch_ratio": {
+        "ASD_mean": 0.008956806183979454,
+        "TD_mean": 0.002394034978642228,
+        "difference_pct": 274.130130256463
+      },
+      "acc_magnitude_mean": {
+        "ASD_mean": 0.9919453994314873,
+        "TD_mean": 0.9906678365086797,
+        "difference_pct": 0.12895976589993685
+      },
+      "acc_magnitude_std": {
+        "ASD_mean": 0.025948178120015205,
+        "TD_mean": 0.017156013299282014,
+        "difference_pct": 51.24829800115127
+      },
+      "tremor_indicator": {
+        "ASD_mean": 0.025948178120015205,
+        "TD_mean": 0.017156013299282014,
+        "difference_pct": 51.24829800115127
+      },
+      "final_completion": {
+        "ASD_mean": 86.29343171489776,
+        "TD_mean": 93.99421556137723,
+        "difference_pct": -8.192827399523257
+      },
+      "completion_progress_rate": {
+        "ASD_mean": 0.07415245472854505,
+        "TD_mean": 0.04989457354704882,
+        "difference_pct": 48.61827540949299
+      }
+    }
+  },
+  "data_shape": [
+    823,
+    24
+  ],
+  "status": "completed"
+}

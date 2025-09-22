@@ -1,0 +1,64 @@
+{
+  "policy": "clinical-both-targets",
+  "targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.7
+  },
+  "models": [
+    "lightgbm",
+    "brf",
+    "logreg"
+  ],
+  "use_polynomial": true,
+  "calibration": "isotonic",
+  "cv": {
+    "folds": [
+      {
+        "fold": 1,
+        "threshold": 0.5538692244574598,
+        "sensitivity": 0.8148148148148148,
+        "specificity": 0.9411764705882353,
+        "auc": 0.8888888888888888
+      },
+      {
+        "fold": 2,
+        "threshold": 0.4847873071550599,
+        "sensitivity": 0.8076923076923077,
+        "specificity": 0.7058823529411764,
+        "auc": 0.8619909502262444
+      },
+      {
+        "fold": 3,
+        "threshold": 0.5322639187089315,
+        "sensitivity": 0.8260869565217391,
+        "specificity": 0.7,
+        "auc": 0.758695652173913
+      },
+      {
+        "fold": 4,
+        "threshold": 0.5622203368526898,
+        "sensitivity": 0.875,
+        "specificity": 0.8947368421052632,
+        "auc": 0.9407894736842106
+      },
+      {
+        "fold": 5,
+        "threshold": 0.6967320034367703,
+        "sensitivity": 0.5925925925925926,
+        "specificity": 0.75,
+        "auc": 0.6631944444444444
+      }
+    ],
+    "threshold_median": 0.5538692244574598,
+    "sensitivity_mean": 0.7832373343242909,
+    "specificity_mean": 0.798359133126935,
+    "auc_mean": 0.8227118818835402
+  },
+  "holdout": {
+    "sensitivity": 0.8181818181818182,
+    "specificity": 0.6666666666666666,
+    "auc": 0.8181818181818182,
+    "threshold": 0.5538692244574598,
+    "meets_targets": false
+  }
+}

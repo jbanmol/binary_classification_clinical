@@ -1,0 +1,161 @@
+{
+  "model_type": "clinical_ensemble",
+  "base_models": [
+    "xgboost",
+    "lightgbm",
+    "random_forest",
+    "logistic",
+    "svm",
+    "neural_net"
+  ],
+  "feature_names": [
+    "target_zone_coverage_min",
+    "target_zone_coverage_mean",
+    "target_zone_coverage_max",
+    "outside_ratio_min",
+    "outside_ratio_mean",
+    "outside_ratio_max",
+    "zone_transition_rate_min",
+    "zone_transition_rate_mean",
+    "zone_transition_rate_max",
+    "velocity_mean_session_mean_mean",
+    "velocity_std_session_mean_mean",
+    "jerk_score_session_mean_mean",
+    "acceleration_std_session_mean_mean",
+    "num_palm_touches_mean",
+    "potential_palm_touches_mean",
+    "max_finger_id_mean",
+    "num_unique_fingers_mean",
+    "tremor_ratio_session_mean_mean",
+    "pressure_std_session_mean_mean",
+    "device_stability_session_mean_mean",
+    "progress_linearity_mean",
+    "final_completion_mean",
+    "session_duration_mean",
+    "num_pauses_mean",
+    "color_switch_rate_mean",
+    "num_points_mean",
+    "num_points_max",
+    "finger_switch_rate_std",
+    "zone_transition_rate_std",
+    "progress_linearity_min",
+    "progress_linearity_max",
+    "avg_plateau_length_mean",
+    "avg_plateau_length_min",
+    "inter_stroke_cv_min",
+    "color_switches_mean",
+    "total_area_covered_mean",
+    "total_area_covered_min",
+    "total_area_covered_max",
+    "velocity_mean_session_mean_min",
+    "velocity_mean_session_std_mean",
+    "velocity_mean_session_max_mean",
+    "velocity_mean_session_max_min",
+    "velocity_std_session_std_min",
+    "velocity_std_session_max_min",
+    "acceleration_std_session_std_min",
+    "jerk_score_session_mean_min",
+    "jerk_score_session_std_mean",
+    "jerk_score_session_std_min",
+    "jerk_score_session_max_mean",
+    "jerk_score_session_max_min",
+    "direction_changes_session_mean_mean",
+    "direction_changes_session_std_min",
+    "pressure_mean_session_mean_max",
+    "zone_coverage_std_mean",
+    "zone_coverage_std_std",
+    "zone_coverage_std_max",
+    "direction_changes_session_max_max",
+    "velocity_accuracy_interaction",
+    "attention_regulation_index",
+    "spatial_deficit_score"
+  ],
+  "target_sensitivity": 0.86,
+  "target_specificity": 0.71,
+  "optimal_threshold": 0.47999999999999976,
+  "cv_scores": {
+    "xgboost": {
+      "mean": 1.7809090909090908,
+      "std": 0.12674280914285233,
+      "scores": [
+        1.9545454545454546,
+        1.8818181818181818,
+        1.6181818181818182,
+        1.7852272727272727,
+        1.6647727272727273
+      ]
+    },
+    "lightgbm": {
+      "mean": 1.7190909090909088,
+      "std": 0.21551806696906559,
+      "scores": [
+        1.9,
+        2.018181818181818,
+        1.5454545454545454,
+        1.6943181818181818,
+        1.4375
+      ]
+    },
+    "random_forest": {
+      "mean": 1.7745454545454542,
+      "std": 0.13566982587477794,
+      "scores": [
+        1.8909090909090909,
+        1.9272727272727272,
+        1.5454545454545454,
+        1.7852272727272727,
+        1.7238636363636362
+      ]
+    },
+    "logistic": {
+      "mean": 1.7152272727272728,
+      "std": 0.115264697167967,
+      "scores": [
+        1.8909090909090909,
+        1.7727272727272727,
+        1.5454545454545454,
+        1.7102272727272727,
+        1.6568181818181817
+      ]
+    },
+    "svm": {
+      "mean": 1.713181818181818,
+      "std": 0.1067373969179802,
+      "scores": [
+        1.8454545454545455,
+        1.8181818181818181,
+        1.6181818181818182,
+        1.7102272727272727,
+        1.5738636363636362
+      ]
+    },
+    "neural_net": {
+      "mean": 1.6111363636363634,
+      "std": 0.12222202395843337,
+      "scores": [
+        1.6999999999999997,
+        1.7545454545454544,
+        1.4,
+        1.5738636363636362,
+        1.6272727272727272
+      ]
+    }
+  },
+  "clinical_metrics": {
+    "sensitivity": 1.0,
+    "specificity": 0.9545454545454546,
+    "ppv": 0.9705882352941176,
+    "npv": 1.0,
+    "accuracy": 0.9818181818181818,
+    "f1_score": 0.9850746268656716,
+    "auc_roc": 0.9972451790633609,
+    "optimal_threshold": 0.47999999999999976,
+    "confusion_matrix": {
+      "tp": 33,
+      "tn": 21,
+      "fp": 1,
+      "fn": 0
+    }
+  },
+  "training_date": "2025-09-07T22:08:48.195496"
+}

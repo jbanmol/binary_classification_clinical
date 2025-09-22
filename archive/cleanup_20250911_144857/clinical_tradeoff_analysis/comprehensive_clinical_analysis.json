@@ -1,0 +1,33 @@
+{
+  "analysis_timestamp": "2025-09-07T23:23:05.352066",
+  "dataset_info": {
+    "total_samples": 867,
+    "total_features_original": 102,
+    "total_features_selected": 101,
+    "unique_children": 285,
+    "asd_samples": 489,
+    "td_samples": 378
+  },
+  "clinical_targets": {
+    "sensitivity": 0.86,
+    "specificity": 0.71
+  },
+  "models_analyzed": [
+    "enhanced_v42_rf",
+    "enhanced_v42_et",
+    "enhanced_xgboost",
+    "enhanced_logistic",
+    "ENHANCED_ENSEMBLE"
+  ],
+  "detailed_analyses": {
+    "enhanced_v42_rf": {
+      "best_scenario": {
+        "strategy": "Current Clinical Standard",
+        "threshold": 0.49659267922327627,
+        "sensitivity": 0.7423312883435583,
+        "specificity": 0.6746031746031746,
+        "accuracy": 0.71280276816609,
+        "precision": 0.7469135802469136,
+        "clinical_safety": 0.7220128542214432,
+        "balanced_accuracy": 0.7084672314733664,
+        "sens_target_met": 
