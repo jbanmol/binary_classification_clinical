@@ -236,6 +236,8 @@ def main():
     parser.add_argument("--out", type=str, help="Output CSV file path")
     parser.add_argument("--bundle", type=str, default="models/final_np_iqrmid_u16n50_k2/bundle.json", 
                        help="Path to model bundle")
+    parser.add_argument("--demographics", type=str, default=None,
+                       help="Optional demographics path (dir or file). If not provided, uses $DEMOGRAPHICS_PATH when set.")
     
     args = parser.parse_args()
     
@@ -347,6 +349,10 @@ def main():
                 '--in', str(aligned_for_inference),
                 '--out', str(temp_predictions_csv)
             ]
+            # Optionally pass demographics path through to scorer
+            demo_path = args.demographics or os.environ.get('DEMOGRAPHICS_PATH')
+            if demo_path:
+                cmd.extend(['--demographics', demo_path])
             result = subprocess.run(cmd, env=env, capture_output=True, text=True)
             if result.returncode != 0:
                 print(result.stdout)
