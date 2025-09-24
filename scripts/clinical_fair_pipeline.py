@@ -45,6 +45,12 @@ try:
 except Exception:  # pragma: no cover
     StratifiedGroupKFold = None  # type: ignore
 from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+
+# Demographics (optional)
+try:
+    from src.demographics.demographic_manager import demographic_manager  # type: ignore
+except Exception:
+    demographic_manager = None  # type: ignore
 from sklearn.calibration import CalibratedClassifierCV
 
 # Optional models - moved to functions to avoid slow imports during --help
@@ -435,7 +441,24 @@ def run_pipeline(target_sens: float,
                  seed: int = 42,
                  holdout_seed: Optional[int] = None,
                  save_preds: bool = False,
-                 export_dir: Optional[str] = None) -> Dict[str, Any]:
+                 export_dir: Optional[str] = None,
+                 demographics_path: Optional[str] = None) -> Dict[str, Any]:
+    # Load demographics if available
+    demographics_df: Optional[pd.DataFrame] = None
+    if demographics_path and demographic_manager is not None:
+        try:
+            # Accept directory or single CSV/XLSX file (use parent dir)
+            base = Path(demographics_path)
+            base_dir = base if base.is_dir() else base.parent
+            if demographic_manager.load_from_dir(base_dir):
+                rows = []
+                for cid, info in demographic_manager.demographic_data.items():
+                    rows.append({"child_id": cid, **info})
+                demographics_df = pd.DataFrame(rows)
+                print(f"[demographics] Loaded {len(demographics_df)} children from {base_dir}")
+        except Exception as e:
+            print(f"[demographics] Warning: failed to load: {e}")
+
     X_df, y, child_ids = build_child_dataset()
     # Seeding
     np.random.seed(seed)
@@ -828,8 +851,24 @@ def run_pipeline(target_sens: float,
         else:
             tau_med = float(np.median(tau_list)) if tau_list else thr_med
 
-    # Apply selected threshold to holdout
-    y_pred_h = (p_hold >= tau_med).astype(int)
+    # Apply selected threshold to holdout, optionally with demographic-aware thresholds per child
+    if demographics_df is not None and demographic_manager is not None:
+        holdout_child_ids = [child_ids[i] for i in te_idx]
+        y_pred_h = np.zeros_like(yte)
+        per_child_thr: List[float] = []
+        for i, cid in enumerate(holdout_child_ids):
+            thr_c = float(demographic_manager.get_clinical_threshold(cid))
+            y_pred_h[i] = 1 if p_hold[i] >= thr_c else 0
+            per_child_thr.append(thr_c)
+        # Safety check: if it harms targets, revert to global
+        tn0, fp0, fn0, tp0 = confusion_matrix(yte, y_pred_h).ravel()
+        sens0 = tp0 / (tp0 + fn0) if (tp0 + fn0) > 0 else 0.0
+        spec0 = tn0 / (tn0 + fp0) if (tn0 + fp0) > 0 else 0.0
+        if not (sens0 >= target_sens and spec0 >= target_spec):
+            y_pred_h = (p_hold >= tau_med).astype(int)
+            print("[demographics] Reverted to global threshold due to safety targets")
+    else:
+        y_pred_h = (p_hold >= tau_med).astype(int)
     tn, fp, fn, tp = confusion_matrix(yte, y_pred_h).ravel()
     sens_h = float(tp / (tp + fn) if (tp + fn) > 0 else 0.0)
     spec_h = float(tn / (tn + fp) if (tn + fp) > 0 else 0.0)
@@ -961,6 +1000,24 @@ def run_pipeline(target_sens: float,
             json.dump(bundle, f, indent=2)
         results['export_dir'] = str(export_path)
 
+        # Export training reference features for domain shift detection at prediction time
+        try:
+            Xtr_df.to_csv(export_path / 'training_reference.csv', index=False)
+            print(f"[export] Wrote training_reference.csv with {len(Xtr_df)} rows")
+        except Exception:
+            pass
+
+        # Optional export of training demographics subset for analysis (not required by runtime)
+        if demographics_df is not None:
+            try:
+                train_child_set = set(groups_tr)
+                demo_sub = demographics_df[demographics_df['child_id'].isin(train_child_set)].copy()
+                if not demo_sub.empty:
+                    demo_sub.to_csv(export_path / 'training_demographics.csv', index=False)
+                    print(f"[demographics] Exported training demographics: {len(demo_sub)}")
+            except Exception:
+                pass
+
     return results
 
 
@@ -987,6 +1044,7 @@ def main():
     ap.add_argument('--save-preds', action='store_true', help='Include holdout IDs, labels, and probabilities in JSON output')
     ap.add_argument('--export-dir', type=str, default=None, help='If set, export the trained bundle to this directory')
     ap.add_argument('--out-name', type=str, default='clinical_fair_pipeline_results.json')
+    ap.add_argument('--demographics-path', type=str, default=None, help='Optional path to demographics dir (default scans data/age_data)')
     args = ap.parse_args()
 
     model_list = [s.strip().lower() for s in args.models.split(',') if s.strip()]
@@ -1009,7 +1067,8 @@ def main():
         seed=args.seed,
         holdout_seed=args.holdout_seed,
         save_preds=args.save_preds,
-        export_dir=args.export_dir
+        export_dir=args.export_dir,
+        demographics_path=args.demographics_path
     )
 
     proj = Path(__file__).resolve().parents[1]

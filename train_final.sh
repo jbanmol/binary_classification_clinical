@@ -21,6 +21,7 @@ for S in "${SEEDS[@]}"; do
     --models lightgbm,xgboost,brf,extratrees --top-k-models 2 \
     --threshold-policy np --threshold-transfer iqr_mid \
     --seed "$S" --holdout-seed "$HOLDOUT_SEED" --save-preds \
+    ${DEMOGRAPHICS_PATH:+--demographics-path "$DEMOGRAPHICS_PATH"} \
     --out-name "$(basename "$OUT")"
   OUTS+=("$OUT")
 done
@@ -38,6 +39,7 @@ done
   --models lightgbm,xgboost,brf,extratrees --top-k-models 2 \
   --threshold-policy np --threshold-transfer iqr_mid \
   --seed 17 --holdout-seed "$HOLDOUT_SEED" --save-preds \
+  ${DEMOGRAPHICS_PATH:+--demographics-path "$DEMOGRAPHICS_PATH"} \
   --export-dir models/final_np_iqrmid_u16n50_k2 \
   --out-name export_s17_ho${HOLDOUT_SEED}_np_iqrmid_temp_u16n50_k2.json
 
