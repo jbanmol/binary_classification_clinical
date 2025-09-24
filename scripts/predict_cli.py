@@ -112,6 +112,8 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
     # Default labels via bundle threshold
     tau = float(bundle['threshold'])
     labels = (P_ens >= tau).astype(int)
+    applied_thresholds = np.full(len(P_ens), tau, dtype=float)
+    demographics_used = False
 
     # Optional demographic-aware overrides per child
     if demographics_path is not None and 'child_id' in df.columns:
@@ -121,18 +123,27 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
             base_dir = base if base.is_dir() else base.parent
             if demographic_manager.load_from_dir(base_dir):
                 labels_d = np.zeros_like(labels)
+                match_count = 0
                 for i, cid in enumerate(df['child_id'].astype(str).tolist()):
                     # Never go below bundle default threshold to avoid increasing FPR
                     thr_demo = float(demographic_manager.get_clinical_threshold(cid))
                     thr_i = max(thr_demo, tau)
+                    applied_thresholds[i] = thr_i
+                    # Heuristic: consider it a match if we have non-default info
+                    if thr_demo != tau:
+                        match_count += 1
                     labels_d[i] = 1 if P_ens[i] >= thr_i else 0
                 labels = labels_d
+                demographics_used = match_count > 0
+                print(f"[demographics] Applied thresholds for {match_count}/{len(labels)} children (dir: {base_dir})")
         except Exception:
             pass
 
     out = df.copy()
     out['prob_asd'] = P_ens
     out['pred_label'] = labels
+    out['applied_threshold'] = applied_thresholds
+    out['demographics_used'] = bool(demographics_used)
     return out
 
 
