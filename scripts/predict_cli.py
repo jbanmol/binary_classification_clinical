@@ -122,7 +122,9 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
             if demographic_manager.load_from_dir(base_dir):
                 labels_d = np.zeros_like(labels)
                 for i, cid in enumerate(df['child_id'].astype(str).tolist()):
-                    thr_i = float(demographic_manager.get_clinical_threshold(cid))
+                    # Never go below bundle default threshold to avoid increasing FPR
+                    thr_demo = float(demographic_manager.get_clinical_threshold(cid))
+                    thr_i = max(thr_demo, tau)
                     labels_d[i] = 1 if P_ens[i] >= thr_i else 0
                 labels = labels_d
         except Exception:
