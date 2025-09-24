@@ -113,6 +113,7 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
     tau = float(bundle['threshold'])
     labels = (P_ens >= tau).astype(int)
     applied_thresholds = np.full(len(P_ens), tau, dtype=float)
+    demo_thresholds = np.full(len(P_ens), np.nan, dtype=float)
     demographics_used = False
 
     # Optional demographic-aware overrides per child
@@ -124,18 +125,19 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
             if demographic_manager.load_from_dir(base_dir):
                 labels_d = np.zeros_like(labels)
                 match_count = 0
-                for i, cid in enumerate(df['child_id'].astype(str).tolist()):
+                child_list = df['child_id'].astype(str).tolist()
+                for i, cid in enumerate(child_list):
                     # Never go below bundle default threshold to avoid increasing FPR
+                    if cid in demographic_manager.demographic_data:
+                        match_count += 1
                     thr_demo = float(demographic_manager.get_clinical_threshold(cid))
+                    demo_thresholds[i] = thr_demo
                     thr_i = max(thr_demo, tau)
                     applied_thresholds[i] = thr_i
-                    # Heuristic: consider it a match if we have non-default info
-                    if thr_demo != tau:
-                        match_count += 1
                     labels_d[i] = 1 if P_ens[i] >= thr_i else 0
                 labels = labels_d
                 demographics_used = match_count > 0
-                print(f"[demographics] Applied thresholds for {match_count}/{len(labels)} children (dir: {base_dir})")
+                print(f"[demographics] Matched {match_count}/{len(labels)} children; thresholds applied (dir: {base_dir})")
         except Exception:
             pass
 
@@ -143,6 +145,7 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
     out['prob_asd'] = P_ens
     out['pred_label'] = labels
     out['applied_threshold'] = applied_thresholds
+    out['demo_threshold'] = demo_thresholds
     out['demographics_used'] = bool(demographics_used)
     return out
 
