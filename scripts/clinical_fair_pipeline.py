@@ -11,6 +11,7 @@ Outputs JSON summary to results/clinical_fair_pipeline_results.json
 """
 import argparse
 import json
+import time
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
 
@@ -52,6 +53,12 @@ try:
 except Exception:
     demographic_manager = None  # type: ignore
 from sklearn.calibration import CalibratedClassifierCV
+try:
+    from src.pipelines.safe_enhancement_pipeline import SafeEnhancementPipeline
+    from src.demographics.safe_demographic_manager import safe_demographic_manager
+except Exception:
+    SafeEnhancementPipeline = None  # type: ignore
+    safe_demographic_manager = None  # type: ignore
 
 # Optional models - moved to functions to avoid slow imports during --help
 
@@ -75,14 +82,26 @@ def build_child_dataset() -> Tuple[pd.DataFrame, np.ndarray, List[str]]:
     Returns X (DataFrame), y (np.ndarray 0/1 with ASD=1), child_ids (List[str]).
     """
     # Import RAG engine only when needed
+    t0 = time.time()
+    print(f"[{time.strftime('%H:%M:%S')}] Starting RAG data ingestion...")
     import sys
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from rag_system.research_engine import research_engine  # type: ignore
+    try:
+        from rag_system import config as rag_config  # type: ignore
+        rag_config.config.RAW_DATA_PATH = Path("data/raw/fileKeys").resolve()
+        rag_config.config.LABELS_PATH = Path("data/knowledge_base/lables_fileKeys.csv").resolve()
+    except Exception:
+        pass
     
     if not research_engine.behavioral_database:
         # Ingest all sessions
+        print(f"[{time.strftime('%H:%M:%S')}] Ingesting raw data (this may take several minutes)...")
         research_engine.ingest_raw_data(limit=None)
+        print(f"[{time.strftime('%H:%M:%S')}] Raw data ingested, indexing behavioral data...")
         research_engine.index_behavioral_data()
+        print(f"[{time.strftime('%H:%M:%S')}] Behavioral database ready: {len(research_engine.behavioral_database)} sessions")
+    print(f"[{time.strftime('%H:%M:%S')}] Building child dataset from behavioral database...")
     df = pd.DataFrame(research_engine.behavioral_database)
     if df.empty:
         raise RuntimeError("No behavioral data available")
@@ -144,6 +163,7 @@ def build_child_dataset() -> Tuple[pd.DataFrame, np.ndarray, List[str]]:
     X = child_df[[c for c in child_df.columns if c not in ['child_id', 'binary_label']]].copy()
     y = (child_df['binary_label'].values == 'ASD').astype(int)
     child_ids = child_df['child_id'].astype(str).tolist()
+    print(f"[{time.strftime('%H:%M:%S')}] Child dataset complete: {len(child_ids)} children, {X.shape[1]} features (took {time.time()-t0:.1f}s)")
     return X, y, child_ids
 
 
@@ -443,6 +463,14 @@ def run_pipeline(target_sens: float,
                  save_preds: bool = False,
                  export_dir: Optional[str] = None,
                  demographics_path: Optional[str] = None) -> Dict[str, Any]:
+    # Progress + timeout
+    START_TIME = time.time()
+    def check_timeout(limit_minutes: float = 45.0) -> None:
+        elapsed = (time.time() - START_TIME) / 60.0
+        if elapsed > limit_minutes:
+            raise TimeoutError(f"Pipeline exceeded {limit_minutes} minutes")
+
+    print(f"[{time.strftime('%H:%M:%S')}] Starting Enhanced Clinical Pipeline...")
     # Load demographics if available
     demographics_df: Optional[pd.DataFrame] = None
     if demographics_path and demographic_manager is not None:
@@ -455,11 +483,28 @@ def run_pipeline(target_sens: float,
                 for cid, info in demographic_manager.demographic_data.items():
                     rows.append({"child_id": cid, **info})
                 demographics_df = pd.DataFrame(rows)
-                print(f"[demographics] Loaded {len(demographics_df)} children from {base_dir}")
+                print(f"[{time.strftime('%H:%M:%S')}] [demographics] Loaded {len(demographics_df)} children from {base_dir}")
         except Exception as e:
-            print(f"[demographics] Warning: failed to load: {e}")
+            print(f"[{time.strftime('%H:%M:%S')}] [demographics] Warning: failed to load: {e}")
 
     X_df, y, child_ids = build_child_dataset()
+    check_timeout()
+
+    # Phase 1: Demographic feature enhancement (if manager available)
+    if demographics_df is not None and safe_demographic_manager is not None:
+        try:
+            print(f"[{time.strftime('%H:%M:%S')}] Enhancing features with demographics (Phase 1)...")
+            f_before = X_df.shape[1]
+            X_aug = safe_demographic_manager.enhance_features(X_df, child_ids)
+            if 'child_id' in X_aug.columns:
+                X_aug = X_aug.drop(columns=['child_id'])
+            numeric_cols = X_aug.select_dtypes(include=[np.number]).columns
+            X_df = X_aug[numeric_cols].copy()
+            print(f"[{time.strftime('%H:%M:%S')}] Demographic enhancement complete: {f_before} -> {X_df.shape[1]} features")
+        except Exception as e:
+            print(f"[{time.strftime('%H:%M:%S')}] [demographics] Enhancement skipped due to error: {e}")
+    else:
+        print(f"[{time.strftime('%H:%M:%S')}] Demographic enhancement skipped (unavailable)")
     # Seeding
     np.random.seed(seed)
     random.seed(seed)
@@ -513,6 +558,8 @@ def run_pipeline(target_sens: float,
     fold_va_indices: List[np.ndarray] = []
 
     for fold, (tri, vai) in enumerate(splits, 1):
+        print(f"[{time.strftime('%H:%M:%S')}] Cross-validation fold {fold}/5...")
+        check_timeout()
         # Fit preprocessors per fold
         ss = StandardScaler()
         Xtri = ss.fit_transform(Xtr_df.values[tri])
@@ -538,6 +585,7 @@ def run_pipeline(target_sens: float,
         auc_list = []
         yv = ytr[vai]
         for name, mdl in models:
+            print(f"[{time.strftime('%H:%M:%S')}] Training model '{name}' (fold {fold})...")
             try:
                 if hasattr(mdl, 'predict_proba') or hasattr(mdl, 'decision_function'):
                     cal = CalibratedClassifierCV(mdl, method=calibration_method, cv=3)
@@ -898,12 +946,81 @@ def run_pipeline(target_sens: float,
             "meets_targets": bool((sens_sf >= target_sens) and (spec_sf >= target_spec))
         }
 
+    # Orchestrate SafeEnhancementPipeline comparison
+    enhancement_section: Dict[str, Any] = {}
+    try:
+        if SafeEnhancementPipeline is not None:
+            print(f"[{time.strftime('%H:%M:%S')}] Orchestrating SafeEnhancementPipeline comparison...")
+            pipeline = SafeEnhancementPipeline(min_sensitivity=target_sens, min_specificity=target_spec)
+
+            def transform_for_holdout(X_in: pd.DataFrame) -> np.ndarray:
+                Z = scaler_all.transform(X_in)
+                if use_umap_cosine:
+                    try:
+                        Z_u = umap_all.transform(Z)  # type: ignore[name-defined]
+                        Z = np.concatenate([Z, Z_u], axis=1)
+                    except Exception:
+                        pass
+                if use_polynomial and not use_umap_cosine:
+                    Z = poly_all.transform(Z)  # type: ignore[name-defined]
+                return Z
+
+            def predict_fn(X_in: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+                Z = transform_for_holdout(X_in)
+                probs = []
+                for name, _ in models:
+                    mdl = per_model_fitted.get(name)
+                    if mdl is None:
+                        continue
+                    if hasattr(mdl, 'predict_proba'):
+                        p = mdl.predict_proba(Z)[:, 1]
+                    elif hasattr(mdl, 'decision_function'):
+                        s = mdl.decision_function(Z)
+                        p = (s - s.min()) / (s.max() - s.min() + 1e-8)
+                    else:
+                        p = np.full(Z.shape[0], 0.5)
+                    probs.append(p)
+                p_mean = np.mean(np.vstack(probs), axis=0) if probs else np.full(Z.shape[0], 0.5)
+                y_pred = (p_mean >= tau_med).astype(int)
+                return y_pred, p_mean
+
+            baseline_context = {
+                "X_val": Xte_df,
+                "y_val": yte,
+                "training_reference": Xtr_df,
+                "child_ids": [child_ids[i] for i in te_idx],
+            }
+            baseline_result = pipeline.fit_baseline(Xtr_df, ytr, predict_fn, baseline_context, baseline_context["child_ids"])  # type: ignore[arg-type]
+
+            enhanced_result = pipeline.fit_enhanced(
+                Xtr_df,
+                ytr,
+                predict_fn,
+                baseline_context,
+                demo_dir=str(Path(demographics_path).parent) if demographics_path else None,
+                metadata_roots=None,
+            )
+
+            chosen = pipeline.run(baseline_result, enhanced_result)
+            enhancement_section = {
+                "baseline": baseline_result.metrics,
+                "enhanced": enhanced_result.metrics,
+                "chosen_strategy": chosen.strategy,
+                "chosen_metrics": chosen.metrics,
+            }
+            print(f"[{time.strftime('%H:%M:%S')}] SafeEnhancementPipeline chose: {enhancement_section['chosen_strategy']}")
+        else:
+            print(f"[{time.strftime('%H:%M:%S')}] SafeEnhancementPipeline not available; skipping Phase 3 orchestration")
+    except Exception as e:
+        print(f"[{time.strftime('%H:%M:%S')}] SafeEnhancementPipeline comparison failed: {e}")
+
     results = {
         "policy": (threshold_policy or "both_targets"),
         "targets": {"sensitivity": target_sens, "specificity": target_spec},
         "models": [n for n, _ in models],
         "use_polynomial": use_polynomial,
         "calibration": calibration_method,
+        "enhancement": enhancement_section or None,
         "cv": {
             "folds": fold_metrics,
             "threshold_median": thr_med,
