@@ -7,20 +7,33 @@ without changing the existing model architecture or bundle format.
 
 from __future__ import annotations
 
-import os
-from pathlib import Path
+import json
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Optional, List
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional
 
 import numpy as np
 import pandas as pd
+
+
+@dataclass(frozen=True)
+class DemographicRecord:
+    """Normalized demographic attributes for a single child."""
+
+    child_id: str
+    age: Optional[float]
+    gender: Optional[str]
+    dataset: str
+    age_group: str
+    source: str
 
 
 class DemographicManager:
     """Manages demographic data and population-specific clinical thresholds."""
 
     def __init__(self) -> None:
-        self.demographic_data: Dict[str, Dict] = {}
+        self.demographic_data: Dict[str, DemographicRecord] = {}
 
         # Age group definitions (years)
         self.age_thresholds: Dict[str, tuple] = {
@@ -54,29 +67,41 @@ class DemographicManager:
 
     # ---------- Public API ----------
 
-    def load_from_dir(self, dir_path: Path) -> bool:
-        """Load demographic data from a directory containing CSV/XLSX files.
+    def load_from_dir(self, dir_path: Path, metadata_roots: Optional[Iterable[Path]] = None) -> bool:
+        """Load demographic data from CSV/XLS(X) files and metadata JSONs.
 
-        Supports flexible column names:
-        - UID -> child_id (required)
-        - Age, Child Age -> age (optional)
-        - Gender, Child Gender -> gender (optional)
-        - Child DOB, DOB -> dob (optional)
+        Args:
+            dir_path: Directory containing demographic CSV/XLS files.
+            metadata_roots: Optional collection of raw-data directories to scan for
+                per-child `*_metadata.json` files.
+
+        Returns:
+            True if any demographic records were loaded, False otherwise.
         """
-        dir_path = Path(dir_path)
-        if not dir_path.exists() or not dir_path.is_dir():
-            return False
 
+        dir_path = Path(dir_path)
         frames: List[pd.DataFrame] = []
-        for p in sorted(dir_path.iterdir()):
-            if p.suffix.lower() in ('.csv', '.xlsx', '.xls'):
-                try:
-                    df = pd.read_csv(p) if p.suffix.lower() == '.csv' else pd.read_excel(p)
-                except Exception:
-                    continue
-                if df is None or df.empty:
-                    continue
-                frames.append(self._normalize_demographic_frame(df, dataset_hint=p.stem))
+
+        if dir_path.exists() and dir_path.is_dir():
+            for p in sorted(dir_path.iterdir()):
+                if p.suffix.lower() in {".csv", ".xlsx", ".xls"}:
+                    try:
+                        df = pd.read_csv(p) if p.suffix.lower() == ".csv" else pd.read_excel(p)
+                    except Exception:
+                        continue
+                    if df is None or df.empty:
+                        continue
+                    frames.append(
+                        self._normalize_demographic_frame(
+                            df,
+                            dataset_hint=p.stem,
+                            source=str(p.name),
+                            priority=1,
+                        )
+                    )
+
+        metadata_records = list(self._load_metadata_records(metadata_roots))
+        frames.extend(metadata_records)
 
         frames = [f for f in frames if not f.empty]
         if not frames:
@@ -87,12 +112,22 @@ class DemographicManager:
         return True
 
     def get_child_demographics(self, child_id: str) -> Dict:
-        return self.demographic_data.get(str(child_id), {
-            'age': None,
-            'gender': None,
-            'dataset': 'unknown',
-            'age_group': 'unknown',
-        })
+        record = self.demographic_data.get(str(child_id))
+        if record is None:
+            return {
+                "age": None,
+                "gender": None,
+                "dataset": "unknown",
+                "age_group": "unknown",
+                "source": "unknown",
+            }
+        return {
+            "age": record.age,
+            "gender": record.gender,
+            "dataset": record.dataset,
+            "age_group": record.age_group,
+            "source": record.source,
+        }
 
     def get_clinical_threshold(self, child_id: str) -> float:
         info = self.get_child_demographics(child_id)
@@ -154,7 +189,13 @@ class DemographicManager:
 
     # ---------- Internal helpers ----------
 
-    def _normalize_demographic_frame(self, df: pd.DataFrame, dataset_hint: str = 'unknown') -> pd.DataFrame:
+    def _normalize_demographic_frame(
+        self,
+        df: pd.DataFrame,
+        dataset_hint: str = "unknown",
+        source: str = "unknown",
+        priority: int = 1,
+    ) -> pd.DataFrame:
         cols = {c.lower().strip(): c for c in df.columns}
 
         def pick(*names: str) -> Optional[str]:
@@ -199,21 +240,147 @@ class DemographicManager:
 
         out['dataset'] = dataset_hint
         out['age_group'] = out['age'].apply(self._age_to_group)
+        out['source'] = source
+        out['priority'] = int(priority)
 
         out = out.dropna(subset=['child_id'])
-        out = out.drop_duplicates(subset=['child_id'], keep='first')
-        return out[['child_id', 'age', 'gender', 'dataset', 'age_group']]
+        out = out.drop_duplicates(subset=['child_id', 'source'], keep='first')
+        return out[['child_id', 'age', 'gender', 'dataset', 'age_group', 'source', 'priority']]
 
     def _build_lookup(self, df: pd.DataFrame) -> None:
-        data: Dict[str, Dict] = {}
-        for _, row in df.iterrows():
-            data[str(row['child_id'])] = {
-                'age': (None if pd.isna(row['age']) else float(row['age'])),
-                'gender': (None if pd.isna(row['gender']) else str(row['gender'])),
-                'dataset': str(row.get('dataset', 'unknown')),
-                'age_group': str(row.get('age_group', 'unknown')),
-            }
+        if 'priority' not in df.columns:
+            df['priority'] = 1
+
+        df_sorted = (
+            df.sort_values(by=['child_id', 'priority'], ascending=[True, False])
+            .drop_duplicates(subset=['child_id'], keep='first')
+        )
+
+        data: Dict[str, DemographicRecord] = {}
+        for _, row in df_sorted.iterrows():
+            child_id = str(row['child_id'])
+            age_val: Optional[float]
+            try:
+                age_val = float(row['age']) if not pd.isna(row['age']) else None
+            except Exception:
+                age_val = None
+
+            gender_val: Optional[str]
+            if pd.isna(row['gender']):
+                gender_val = None
+            else:
+                gender_clean = str(row['gender']).strip().lower()
+                gender_val = gender_clean if gender_clean else None
+            data[child_id] = DemographicRecord(
+                child_id=child_id,
+                age=age_val,
+                gender=gender_val,
+                dataset=str(row.get('dataset', 'unknown')),
+                age_group=str(row.get('age_group', 'unknown')),
+                source=str(row.get('source', 'unknown')),
+            )
         self.demographic_data = data
+
+    def _load_metadata_records(self, metadata_roots: Optional[Iterable[Path]]) -> Iterable[pd.DataFrame]:
+        roots: List[Path]
+        if metadata_roots is None:
+            roots = [Path('data/raw')]
+        else:
+            roots = [Path(r) for r in metadata_roots]
+
+        frames: List[pd.DataFrame] = []
+        for root in roots:
+            root = root.expanduser().resolve()
+            if not root.exists():
+                continue
+
+            rows: List[Dict[str, Any]] = []
+            for meta_path in root.rglob('*metadata.json'):
+                try:
+                    with meta_path.open('r') as f:
+                        meta = json.load(f)
+                except Exception:
+                    continue
+
+                child_raw = meta.get('subject_uid') or meta.get('child_id') or meta.get('uid')
+                if not child_raw:
+                    child_raw = meta_path.parent.name
+                child_id = self._normalize_child_id(str(child_raw))
+                if not child_id:
+                    continue
+
+                age_value = self._coerce_age(meta.get('subject_age') or meta.get('age'))
+                if age_value is None:
+                    age_value = self._age_from_dob(meta.get('subject_dob') or meta.get('dob'))
+
+                gender_value = self._normalize_gender(meta.get('subject_gender') or meta.get('gender'))
+
+                dataset_hint = str(meta.get('organization_name') or meta.get('dataset') or self._infer_dataset(root, meta_path))
+
+                rows.append(
+                    {
+                        'child_id': child_id,
+                        'age': age_value,
+                        'gender': gender_value,
+                        'dataset': dataset_hint,
+                        'age_group': self._age_to_group(age_value) if age_value is not None else 'unknown',
+                        'source': f'metadata:{meta_path.name}',
+                        'priority': 2,
+                    }
+                )
+
+            if rows:
+                frames.append(pd.DataFrame(rows))
+
+        return frames
+
+    def _coerce_age(self, value: Any) -> Optional[float]:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            if not value.strip():
+                return None
+        try:
+            return float(value)
+        except Exception:
+            return None
+
+    def _age_from_dob(self, dob: Any) -> Optional[float]:
+        if dob in (None, ''):
+            return None
+        try:
+            dob_series = pd.to_datetime([dob], errors='coerce')
+        except Exception:
+            return None
+        if dob_series.isna().all():
+            return None
+        now = datetime.now()
+        dob_val = dob_series.iloc[0]
+        if pd.isna(dob_val):
+            return None
+        return float((now - dob_val).days / 365.25)
+
+    def _normalize_gender(self, value: Any) -> str:
+        if value is None:
+            return 'unknown'
+        label = str(value).strip().lower()
+        if label in {'m', 'male', 'boy'}:
+            return 'male'
+        if label in {'f', 'female', 'girl'}:
+            return 'female'
+        return 'unknown'
+
+    def _infer_dataset(self, root: Path, meta_path: Path) -> str:
+        try:
+            rel = meta_path.relative_to(root)
+            parts = rel.parts
+            if len(parts) >= 2:
+                return parts[0]
+            if parts:
+                return parts[0]
+        except Exception:
+            pass
+        return root.name
 
     def _age_to_group(self, age: float) -> str:
         try:

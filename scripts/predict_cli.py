@@ -9,6 +9,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
+from typing import Optional
 
 # Stability: limit threads on macOS to avoid OpenMP segfaults (no algorithm change)
 # Also suppress OpenMP deprecation warnings on macOS.
@@ -27,6 +28,8 @@ except ImportError:
     ):
         os.environ.setdefault(_k, _v)
 
+from src.domain_adaptation import DeviceRobustPreprocessor
+
 
 def load_bundle(bundle_path: Path):
     b = json.load(open(bundle_path))
@@ -44,30 +47,30 @@ def _load_training_reference(bundle_root: Path):
     return None
 
 
+def _prepare_preprocessor(training_ref: Optional[pd.DataFrame]) -> Optional[DeviceRobustPreprocessor]:
+    if training_ref is None or training_ref.empty:
+        return None
+    preproc = DeviceRobustPreprocessor(adaptation_strength=0.4)
+    try:
+        preproc.fit_training_distribution(training_ref)
+    except Exception:
+        return None
+    return preproc
+
+
 def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -> pd.DataFrame:
     cols = bundle['feature_columns']
     df = pd.read_csv(in_csv)
     X = df[cols].copy()
 
-    # Optional domain adaptation using exported training reference
-    train_ref = _load_training_reference(root)
-    if train_ref is not None:
+    training_ref = _load_training_reference(root)
+    preproc = _prepare_preprocessor(training_ref)
+    if preproc is not None:
         try:
-            # Import lazily to avoid mandatory dependency
-            from src.domain_adaptation import domain_detector, domain_adapter  # type: ignore
-            analysis = domain_detector.comprehensive_shift_analysis(train_ref, X)
-            if analysis.get('overall_shift_severity') in ('MODERATE', 'SEVERE'):
-                common = list(set(train_ref.columns) & set(X.columns))
-                if len(common) > 5:
-                    T_vals = train_ref[common].fillna(0).values
-                    X_vals = X[common].fillna(0).values
-                    X_adapted, _ = domain_adapter.coral_alignment(T_vals, X_vals)
-                    X = X.copy()
-                    X[common] = X_adapted
+            X = preproc.adapt(X)
         except Exception:
             pass
 
-    # Preprocess
     scaler = joblib.load(root/'preprocess'/'scaler_all.joblib')
     X_s = scaler.transform(X)
     try:
@@ -109,14 +112,9 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
         T = float(comb['temperature_T'])
         P_ens = 1/(1+np.exp(-np.log(P_ens/(1-P_ens+1e-12))/T))
 
-    # Default labels via bundle threshold
     tau = float(bundle['threshold'])
     labels = (P_ens >= tau).astype(int)
-    applied_thresholds = np.full(len(P_ens), tau, dtype=float)
-    demo_thresholds = np.full(len(P_ens), np.nan, dtype=float)
-    demographics_used = False
 
-    # Optional demographic-aware overrides per child
     if demographics_path is not None and 'child_id' in df.columns:
         try:
             from src.demographics.demographic_manager import demographic_manager  # type: ignore
@@ -124,29 +122,17 @@ def predict(bundle, root, in_csv: Path, demographics_path: Path | None = None) -
             base_dir = base if base.is_dir() else base.parent
             if demographic_manager.load_from_dir(base_dir):
                 labels_d = np.zeros_like(labels)
-                match_count = 0
-                child_list = df['child_id'].astype(str).tolist()
-                for i, cid in enumerate(child_list):
-                    # Never go below bundle default threshold to avoid increasing FPR
-                    if cid in demographic_manager.demographic_data:
-                        match_count += 1
+                for i, cid in enumerate(df['child_id'].astype(str).tolist()):
                     thr_demo = float(demographic_manager.get_clinical_threshold(cid))
-                    demo_thresholds[i] = thr_demo
                     thr_i = max(thr_demo, tau)
-                    applied_thresholds[i] = thr_i
                     labels_d[i] = 1 if P_ens[i] >= thr_i else 0
                 labels = labels_d
-                demographics_used = match_count > 0
-                print(f"[demographics] Matched {match_count}/{len(labels)} children; thresholds applied (dir: {base_dir})")
         except Exception:
             pass
 
     out = df.copy()
     out['prob_asd'] = P_ens
     out['pred_label'] = labels
-    out['applied_threshold'] = applied_thresholds
-    out['demo_threshold'] = demo_thresholds
-    out['demographics_used'] = bool(demographics_used)
     return out
 
 
