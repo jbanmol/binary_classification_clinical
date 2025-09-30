@@ -27,8 +27,40 @@ def print_header():
     print("⚠️  Current Issue: High CV variance (60-90% sensitivity range)")
     print("🚀 Goal: Systematic performance improvement\n")
 
+def load_labels_from_processed() -> Optional[pd.DataFrame]:
+    """Load labels from data/processed/labels.csv (PRIORITY method)"""
+    try:
+        labels_file = Path("data/processed/labels.csv")
+        if not labels_file.exists():
+            print("   ⚠️ No processed labels file found")
+            return None
+            
+        df_labels = pd.read_csv(labels_file)
+        
+        # Check for required columns
+        if 'Unity_id' not in df_labels.columns or 'Group' not in df_labels.columns:
+            print(f"   ⚠️ Missing required columns in {labels_file}")
+            return None
+        
+        # Convert Group to target (ASD=1, TD=0)
+        df_labels['target'] = (df_labels['Group'] == 'ASD').astype(int)
+        
+        # Rename Unity_id to child_id for consistency
+        df_labels = df_labels.rename(columns={'Unity_id': 'child_id'})
+        
+        child_labels = df_labels[['child_id', 'target']].copy()
+        
+        print(f"   ✅ Loaded {len(child_labels)} REAL labels from processed/labels.csv")
+        print(f"   📊 Label distribution: ASD={child_labels['target'].sum()}, TD={len(child_labels)-child_labels['target'].sum()}")
+        
+        return child_labels
+        
+    except Exception as e:
+        print(f"   ⚠️ Error loading processed labels: {e}")
+        return None
+
 def load_labels_from_rag() -> Optional[pd.DataFrame]:
-    """Try to load labels using the RAG system like the main pipeline does"""
+    """Try to load labels using the RAG system (FALLBACK method)"""
     try:
         print("🔄 Attempting to load labels via RAG system...")
         
@@ -151,12 +183,21 @@ def load_features_with_labels() -> Tuple[Optional[pd.DataFrame], bool]:
             print("   ❌ No child_id column found for merging")
             return None, False
         
-        # Try to load labels from different sources
-        child_labels = load_labels_from_rag()
+        # PRIORITY: Try processed labels first
+        print("🎯 Trying REAL labels from processed/labels.csv first...")
+        child_labels = load_labels_from_processed()
+        
+        # FALLBACK: Try RAG system
+        if child_labels is None:
+            print("   🔄 Trying RAG system as fallback...")
+            child_labels = load_labels_from_rag()
+        
+        # FALLBACK: Try sample data
         if child_labels is None:
             print("   🔄 Trying sample data as fallback...")
             child_labels = load_labels_from_sample()
         
+        # LAST RESORT: Synthetic labels
         if child_labels is None:
             print("   ⚠️ No real labels available, creating synthetic labels for analysis...")
             child_labels = create_synthetic_labels(df_features)
@@ -172,9 +213,10 @@ def load_features_with_labels() -> Tuple[Optional[pd.DataFrame], bool]:
         print(f"   🔍 ID format check: {len(overlap)} overlapping IDs")
         
         if len(overlap) == 0:
-            print(f"   ⚠️ No matching child IDs - using synthetic labels for analysis")
+            print(f"   ⚠️ No matching child IDs - ID format mismatch detected")
             print(f"   Features ID example: {list(features_ids)[0] if features_ids else 'None'}")
             print(f"   Labels ID example: {list(label_ids)[0] if label_ids else 'None'}")
+            print(f"   ⚠️ Using synthetic labels for analysis (FEATURE PROCESSING may use different raw data)")
             
             # Use synthetic labels based on features
             child_labels = create_synthetic_labels(df_features)
@@ -187,7 +229,12 @@ def load_features_with_labels() -> Tuple[Optional[pd.DataFrame], bool]:
             synthetic_labels = create_synthetic_labels(df_features)
             df_merged = df_merged.merge(synthetic_labels, on='child_id', how='left')
         
-        print(f"   ✅ Analysis dataset ready: {len(df_merged)} samples with labels")
+        # Show what type of labels we're using
+        if len(overlap) > 0:
+            print(f"   ✅ SUCCESS: Using REAL labels for {len(df_merged)} samples!")
+        else:
+            print(f"   ⚠️ Using SYNTHETIC labels for {len(df_merged)} samples (analysis only)")
+        
         return df_merged, True
         
     except Exception as e:
