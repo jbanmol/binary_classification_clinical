@@ -22,8 +22,9 @@ def _resolve_project_path() -> Path:
 
 
 def _resolve_raw_data_path() -> Path:
-    """Resolve raw data path with env override, fallback to previous absolute path."""
-    default = "/Users/jbanmol/Desktop/git_projects/binary-classification-project/data"
+    """Resolve raw data path with env override, fallback to data/raw/fileKeys."""
+    # Prefer env var, fallback to relative path from config.py location
+    default = str(Path(__file__).resolve().parent.parent / "data" / "raw" / "fileKeys")
     return Path(os.getenv("RAW_DATA_PATH", default)).expanduser().resolve()
 
 

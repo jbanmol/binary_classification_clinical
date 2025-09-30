@@ -16,6 +16,7 @@ from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
 import warnings
 warnings.filterwarnings('ignore')
+from rag_system.safe_embedder import create_safe_embedder
 
 try:
     # Prefer explicit package import to avoid clashing with project root config.py
@@ -310,38 +311,55 @@ class RAGResearchEngine:
         metadatas = [doc['metadata'] for doc in summaries]
         ids = [doc['id'] for doc in summaries]
         
-        print(f"Generating embeddings for {len(texts)} behavioral summaries...")
-        embeddings = self.embeddings_model.encode(texts, convert_to_numpy=True)
+        # Use SafeEmbedder instead of direct encoding to prevent hanging
+        print(f"Generating embeddings for {len(texts)} behavioral summaries using SafeEmbedder...")
+        safe_embedder = create_safe_embedder()
+        embeddings = safe_embedder.encode_texts_batched(texts)
+        if embeddings is None:
+            raise RuntimeError("Failed to generate embeddings with SafeEmbedder")
         
-        # Add to vector database in batches
-        batch_size = 100
-        for i in range(0, len(texts), batch_size):
-            batch_end = min(i + batch_size, len(texts))
-            try:
-                self.vector_db.add(
-                    documents=texts[i:batch_end],
-                    metadatas=metadatas[i:batch_end],
-                    ids=ids[i:batch_end],
-                    embeddings=embeddings[i:batch_end].tolist()
-                )
-            except Exception as e:
-                # Likely duplicate IDs on re-index; attempt update or skip
-                try:
-                    if hasattr(self.vector_db, 'update'):
-                        self.vector_db.update(
-                            documents=texts[i:batch_end],
-                            metadatas=metadatas[i:batch_end],
-                            ids=ids[i:batch_end],
-                            embeddings=embeddings[i:batch_end].tolist()
-                        )
-                    else:
-                        print(f"Warning: indexing batch {i//batch_size + 1} failed: {e}. Skipping (possible duplicates).")
-                except Exception:
-                    print(f"Warning: indexing batch {i//batch_size + 1} update failed. Skipping (possible duplicates).")
+        # Add to vector database with optimized small batches to prevent ChromaDB bottleneck
+        print(f"Indexing {len(texts)} embeddings to ChromaDB with optimized batching...")
+        db_batch_size = 20  # Small batches prevent database locks and improve performance
+        total_db_batches = (len(texts) + db_batch_size - 1) // db_batch_size
+        
+        indexed_count = 0
+        import time as _time
+        
+        for i in range(0, len(texts), db_batch_size):
+            batch_end = min(i + db_batch_size, len(texts))
+            batch_num = (i // db_batch_size) + 1
+            batch_size_actual = batch_end - i
             
-            print(f"Indexed batch {i//batch_size + 1}/{(len(texts) + batch_size - 1)//batch_size}")
+            try:
+                # Try upsert first for better duplicate handling
+                if hasattr(self.vector_db, 'upsert'):
+                    self.vector_db.upsert(
+                        documents=texts[i:batch_end],
+                        metadatas=metadatas[i:batch_end],
+                        ids=ids[i:batch_end],
+                        embeddings=embeddings[i:batch_end].tolist()
+                    )
+                else:
+                    self.vector_db.add(
+                        documents=texts[i:batch_end],
+                        metadatas=metadatas[i:batch_end],
+                        ids=ids[i:batch_end],
+                        embeddings=embeddings[i:batch_end].tolist()
+                    )
+                indexed_count += batch_size_actual
+                if batch_num % 10 == 0 or batch_num == total_db_batches:  # Progress every 10 batches
+                    print(f"  ChromaDB: {indexed_count}/{len(texts)} indexed ({batch_num}/{total_db_batches} batches)")
+                    
+            except Exception as e:
+                # Continue processing even if some batches fail
+                print(f"  Warning: Batch {batch_num} failed ({e}), continuing...")
+            
+            # Small delay to prevent database lock contention
+            if batch_num % 5 == 0:
+                _time.sleep(0.02)
         
-        print(f"Successfully indexed {len(texts)} behavioral summaries")
+        print(f"✅ ChromaDB indexing complete: {indexed_count}/{len(texts)} successfully indexed")
     
     def research_query(self, query: str, n_results: int = 10) -> Dict[str, Any]:
         """Execute research query against behavioral database"""
@@ -475,7 +493,8 @@ class RAGResearchEngine:
             return {}
         texts = [doc['text'] for doc in summaries]
         metadatas = [doc['metadata'] for doc in summaries]
-        embeddings = self.embeddings_model.encode(texts, convert_to_numpy=True)
+        safe_embedder = create_safe_embedder()
+        embeddings = safe_embedder.encode_texts_batched(texts)
         import numpy as np
         labels = np.array([m.get('binary_label') for m in metadatas])
         centroids = {}
@@ -499,7 +518,8 @@ class RAGResearchEngine:
         summaries = self.create_behavioral_summaries()
         texts = [doc['text'] for doc in summaries]
         metadatas = [doc['metadata'] for doc in summaries]
-        emb = self.embeddings_model.encode(texts, convert_to_numpy=True)
+        safe_embedder = create_safe_embedder()
+        emb = safe_embedder.encode_texts_batched(texts)
         # Map child to embeddings
         child_to_vecs = {}
         for vec, meta in zip(emb, metadatas):
@@ -568,7 +588,8 @@ class RAGResearchEngine:
         # Encode training summaries and compute label centroids
         train_texts = [texts[i] for i in train_idx]
         train_metas = [metadatas[i] for i in train_idx]
-        E_train = self.embeddings_model.encode(train_texts, convert_to_numpy=True)
+        safe_embedder = create_safe_embedder()
+        E_train = safe_embedder.encode_texts_batched(train_texts)
         labels = np.array([m.get('binary_label') for m in train_metas])
 
         centroids: Dict[str, np.ndarray] = {}
@@ -583,7 +604,8 @@ class RAGResearchEngine:
         # Encode target summaries and aggregate per child
         target_texts = [texts[i] for i in target_idx]
         target_metas = [metadatas[i] for i in target_idx]
-        E_target = self.embeddings_model.encode(target_texts, convert_to_numpy=True)
+        safe_embedder = create_safe_embedder()
+        E_target = safe_embedder.encode_texts_batched(target_texts)
 
         child_to_vecs: Dict[Any, List[np.ndarray]] = {}
         for vec, meta in zip(E_target, target_metas):
