@@ -33,7 +33,7 @@ class DomainShiftDetector:
             ks_stat, ks_p = ks_2samp(s, t)
             w_dist = float(wasserstein_distance(s, t))
             pooled_std = float(np.sqrt((s.var() + t.var()) / 2.0))
-            mean_shift = float(abs(s.mean() - t.mean()) / (pooled_std + 1e-8))
+            mean_shift = float(abs(s.mean() - t.mean()) / (pooled_std + 1e-8)) if pooled_std > 1e-8 else 0.0
             shift_results[feature] = {
                 "ks_statistic": float(ks_stat),
                 "ks_p_value": float(ks_p),
@@ -49,7 +49,7 @@ class DomainShiftDetector:
         target_cov = EmpiricalCovariance().fit(target_data).covariance_
         cov_diff_norm = float(np.linalg.norm(source_cov - target_cov, ord="fro"))
         source_norm = float(np.linalg.norm(source_cov, ord="fro"))
-        rel = cov_diff_norm / (source_norm + 1e-8)
+        rel = cov_diff_norm / (source_norm + 1e-8) if source_norm > 1e-8 else 0.0
         return {
             "covariance_difference_norm": cov_diff_norm,
             "relative_covariance_shift": float(rel),

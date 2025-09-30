@@ -81,6 +81,6 @@ def _safe_ratio(features: Mapping[str, float], numerator_key: str, denominator_k
     except Exception:
         return None
 
-    return numerator / (denominator + 1e-8)
+    return numerator / (denominator + 1e-8) if denominator > 1e-8 else numerator
 
 

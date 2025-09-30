@@ -28,6 +28,7 @@ except ImportError:
         ("MKL_NUM_THREADS", "1"),
         ("VECLIB_MAXIMUM_THREADS", "1"),
         ("NUMEXPR_NUM_THREADS", "1"),
+        ("LIGHTGBM_NUM_THREADS", "1"),
     ):
         os.environ.setdefault(_k, _v)
 
@@ -37,6 +38,41 @@ import random
 import joblib
 
 from sklearn.preprocessing import StandardScaler, PolynomialFeatures
+
+
+def safe_divide(numerator, denominator, default_value=0.0, eps=1e-8):
+    """Safely divide two pandas Series, handling zeros, NaNs, and edge cases.
+    
+    Args:
+        numerator: pandas Series or array-like numerator values
+        denominator: pandas Series or array-like denominator values  
+        default_value: Value to return when numerator is NaN
+        eps: Small epsilon to prevent division by zero
+        
+    Returns:
+        pandas Series with safe division results
+    """
+    # Convert to pandas Series if needed
+    if not isinstance(numerator, pd.Series):
+        numerator = pd.Series(numerator)
+    if not isinstance(denominator, pd.Series):
+        denominator = pd.Series(denominator)
+    
+    # Handle NaN numerators
+    numerator_clean = numerator.fillna(default_value)
+    
+    # Create safe denominator (replace zeros and NaNs with eps)
+    denominator_safe = np.where(
+        (denominator.isna()) | (denominator <= eps), 
+        eps, 
+        denominator
+    )
+    
+    # Perform safe division
+    result = numerator_clean / denominator_safe
+    
+    # Return as pandas Series with original index
+    return pd.Series(result, index=numerator.index)
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.model_selection import GroupShuffleSplit
@@ -118,27 +154,26 @@ def build_child_dataset() -> Tuple[pd.DataFrame, np.ndarray, List[str]]:
     sess_count = df.groupby('child_id').size().rename('session_count').reset_index()
     agg = agg.merge(sess_count, on='child_id', how='left')
     # Engineer domain features on aggregated numeric signals (no label leakage)
-    eps = 1e-8
     # Per-zone dynamics
     if 'unique_zones' in agg.columns and 'total_touch_points' in agg.columns:
-        agg['touches_per_zone'] = agg['total_touch_points'] / (agg['unique_zones'] + eps)
+        agg['touches_per_zone'] = safe_divide(agg['total_touch_points'], agg['unique_zones'])
     if 'unique_zones' in agg.columns and 'stroke_count' in agg.columns:
-        agg['strokes_per_zone'] = agg['stroke_count'] / (agg['unique_zones'] + eps)
+        agg['strokes_per_zone'] = safe_divide(agg['stroke_count'], agg['unique_zones'])
     if 'unique_zones' in agg.columns and 'session_duration' in agg.columns:
-        agg['zones_per_minute'] = agg['unique_zones'] / (agg['session_duration'] / 60.0 + eps)
+        agg['zones_per_minute'] = safe_divide(agg['unique_zones'], agg['session_duration'] / 60.0)
     # Jitter/jerk proxies
     if 'velocity_mean' in agg.columns and 'velocity_std' in agg.columns:
-        agg['vel_std_over_mean'] = agg['velocity_std'] / (agg['velocity_mean'] + eps)
+        agg['vel_std_over_mean'] = safe_divide(agg['velocity_std'], agg['velocity_mean'])
     if 'acc_magnitude_mean' in agg.columns and 'acc_magnitude_std' in agg.columns:
-        agg['acc_std_over_mean'] = agg['acc_magnitude_std'] / (agg['acc_magnitude_mean'] + eps)
+        agg['acc_std_over_mean'] = safe_divide(agg['acc_magnitude_std'], agg['acc_magnitude_mean'])
     # Temporal stability indices
     if 'avg_time_between_points' in agg.columns and 'session_duration' in agg.columns:
-        agg['avg_ibp_norm'] = agg['avg_time_between_points'] / (agg['session_duration'] + eps)
-        agg['interpoint_rate'] = (agg['session_duration'] + eps) / (agg['avg_time_between_points'] + eps)
+        agg['avg_ibp_norm'] = safe_divide(agg['avg_time_between_points'], agg['session_duration'])
+        agg['interpoint_rate'] = safe_divide(agg['session_duration'], agg['avg_time_between_points'])
     if 'total_touch_points' in agg.columns and 'session_duration' in agg.columns:
-        agg['touch_rate'] = agg['total_touch_points'] / (agg['session_duration'] + eps)
+        agg['touch_rate'] = safe_divide(agg['total_touch_points'], agg['session_duration'])
     if 'stroke_count' in agg.columns and 'session_duration' in agg.columns:
-        agg['stroke_rate'] = agg['stroke_count'] / (agg['session_duration'] + eps)
+        agg['stroke_rate'] = safe_divide(agg['stroke_count'], agg['session_duration'])
     # Quantile bins (quartiles) for key ratios, expanded to one-hot indicators
     def _add_bin_flags(df_in: pd.DataFrame, col: str, q: int = 4) -> pd.DataFrame:
         if col not in df_in.columns:
@@ -598,7 +633,7 @@ def run_pipeline(target_sens: float,
                     else:
                         # decision_function fallback
                         scores = mdl.decision_function(Xvai)
-                        prob = (scores - scores.min()) / (scores.max() - scores.min() + 1e-8)
+                        prob = safe_divide(scores - scores.min(), scores.max() - scores.min())
                 proba_list.append(prob)
                 auc_list.append(roc_auc_score(yv, prob))
                 # Save into OOF array for this model
@@ -771,7 +806,7 @@ def run_pipeline(target_sens: float,
                     per_model_hold[name] = mdl.predict_proba(Xte_s)[:, 1]
                 elif hasattr(mdl, 'decision_function'):
                     scores = mdl.decision_function(Xte_s)
-                    per_model_hold[name] = (scores - scores.min()) / (scores.max() - scores.min() + 1e-8)
+                    per_model_hold[name] = safe_divide(scores - scores.min(), scores.max() - scores.min())
                 else:
                     # fallback to uniform 0.5
                     per_model_hold[name] = np.full(len(yte), 0.5)
@@ -976,7 +1011,7 @@ def run_pipeline(target_sens: float,
                         p = mdl.predict_proba(Z)[:, 1]
                     elif hasattr(mdl, 'decision_function'):
                         s = mdl.decision_function(Z)
-                        p = (s - s.min()) / (s.max() - s.min() + 1e-8)
+                        p = safe_divide(s - s.min(), s.max() - s.min())
                     else:
                         p = np.full(Z.shape[0], 0.5)
                     probs.append(p)

@@ -66,7 +66,7 @@ def create_age_developmental_features(
     velocity_mean = _safe_get(base_features, "velocity_mean")
     if velocity_std is not None and velocity_mean is not None:
         expected_motor_control = max(0.5, 1.2 - (age_months - 24.0) * 0.015)
-        actual_control = velocity_std / (velocity_mean + 1e-8)
+        actual_control = velocity_std / (velocity_mean + 1e-8) if velocity_mean > 1e-8 else 1.0
         enhanced["motor_development_ratio"] = float(actual_control / expected_motor_control)
     else:
         enhanced.setdefault("motor_development_ratio", 1.0)
@@ -75,7 +75,7 @@ def create_age_developmental_features(
     final_completion = _safe_get(base_features, "final_completion")
     if final_completion is not None:
         expected_completion = min(95.0, 60.0 + (age_months - 24.0) * 0.8)
-        enhanced["completion_age_ratio"] = float(final_completion / (expected_completion + 1e-8))
+        enhanced["completion_age_ratio"] = float(final_completion / (expected_completion + 1e-8)) if expected_completion > 1e-8 else 1.0
     else:
         enhanced.setdefault("completion_age_ratio", 1.0)
 

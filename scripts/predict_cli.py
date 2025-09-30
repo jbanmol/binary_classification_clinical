@@ -4,12 +4,17 @@ Predict CLI for ASD/TD model bundle.
 Usage:
   ./venv/bin/python scripts/predict_cli.py --bundle models/final_np_iqrmid_u16n50_k2/bundle.json --in data/child_level_features.csv --out predictions.csv
 """
-import argparse, json, os
+import argparse, json, os, sys
 from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
 from typing import Optional
+
+# Ensure project root is on sys.path so we can import local modules
+PROJ_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJ_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJ_ROOT))
 
 # Stability: limit threads on macOS to avoid OpenMP segfaults (no algorithm change)
 # Also suppress OpenMP deprecation warnings on macOS.
@@ -25,6 +30,7 @@ except ImportError:
         ("MKL_NUM_THREADS", "1"),
         ("VECLIB_MAXIMUM_THREADS", "1"),
         ("NUMEXPR_NUM_THREADS", "1"),
+        ("LIGHTGBM_NUM_THREADS", "1"),
     ):
         os.environ.setdefault(_k, _v)
 

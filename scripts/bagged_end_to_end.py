@@ -47,6 +47,41 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
+
+
+def safe_divide(numerator, denominator, default_value=0.0, eps=1e-8):
+    """Safely divide two pandas Series, handling zeros, NaNs, and edge cases.
+    
+    Args:
+        numerator: pandas Series or array-like numerator values
+        denominator: pandas Series or array-like denominator values  
+        default_value: Value to return when numerator is NaN
+        eps: Small epsilon to prevent division by zero
+        
+    Returns:
+        pandas Series with safe division results
+    """
+    # Convert to pandas Series if needed
+    if not isinstance(numerator, pd.Series):
+        numerator = pd.Series(numerator)
+    if not isinstance(denominator, pd.Series):
+        denominator = pd.Series(denominator)
+    
+    # Handle NaN numerators
+    numerator_clean = numerator.fillna(default_value)
+    
+    # Create safe denominator (replace zeros and NaNs with eps)
+    denominator_safe = np.where(
+        (denominator.isna()) | (denominator <= eps), 
+        eps, 
+        denominator
+    )
+    
+    # Perform safe division
+    result = numerator_clean / denominator_safe
+    
+    # Return as pandas Series with original index
+    return pd.Series(result, index=numerator.index)
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, roc_curve
@@ -167,24 +202,23 @@ def build_child_dataset() -> Tuple[pd.DataFrame, np.ndarray, List[str]]:
     agg = agg.merge(sess_count, on='child_id', how='left')
 
     # Domain features (leakage-safe; derived from aggregated numeric columns)
-    eps = 1e-8
     if 'unique_zones' in agg.columns and 'total_touch_points' in agg.columns:
-        agg['touches_per_zone'] = agg['total_touch_points'] / (agg['unique_zones'] + eps)
+        agg['touches_per_zone'] = safe_divide(agg['total_touch_points'], agg['unique_zones'])
     if 'unique_zones' in agg.columns and 'stroke_count' in agg.columns:
-        agg['strokes_per_zone'] = agg['stroke_count'] / (agg['unique_zones'] + eps)
+        agg['strokes_per_zone'] = safe_divide(agg['stroke_count'], agg['unique_zones'])
     if 'unique_zones' in agg.columns and 'session_duration' in agg.columns:
-        agg['zones_per_minute'] = agg['unique_zones'] / (agg['session_duration'] / 60.0 + eps)
+        agg['zones_per_minute'] = safe_divide(agg['unique_zones'], agg['session_duration'] / 60.0)
     if 'velocity_mean' in agg.columns and 'velocity_std' in agg.columns:
-        agg['vel_std_over_mean'] = agg['velocity_std'] / (agg['velocity_mean'] + eps)
+        agg['vel_std_over_mean'] = safe_divide(agg['velocity_std'], agg['velocity_mean'])
     if 'acc_magnitude_mean' in agg.columns and 'acc_magnitude_std' in agg.columns:
-        agg['acc_std_over_mean'] = agg['acc_magnitude_std'] / (agg['acc_magnitude_mean'] + eps)
+        agg['acc_std_over_mean'] = safe_divide(agg['acc_magnitude_std'], agg['acc_magnitude_mean'])
     if 'avg_time_between_points' in agg.columns and 'session_duration' in agg.columns:
-        agg['avg_ibp_norm'] = agg['avg_time_between_points'] / (agg['session_duration'] + eps)
-        agg['interpoint_rate'] = (agg['session_duration'] + eps) / (agg['avg_time_between_points'] + eps)
+        agg['avg_ibp_norm'] = safe_divide(agg['avg_time_between_points'], agg['session_duration'])
+        agg['interpoint_rate'] = safe_divide(agg['session_duration'], agg['avg_time_between_points'])
     if 'total_touch_points' in agg.columns and 'session_duration' in agg.columns:
-        agg['touch_rate'] = agg['total_touch_points'] / (agg['session_duration'] + eps)
+        agg['touch_rate'] = safe_divide(agg['total_touch_points'], agg['session_duration'])
     if 'stroke_count' in agg.columns and 'session_duration' in agg.columns:
-        agg['stroke_rate'] = agg['stroke_count'] / (agg['session_duration'] + eps)
+        agg['stroke_rate'] = safe_divide(agg['stroke_count'], agg['session_duration'])
 
     # Quantile bins for selected ratios
     def _add_bin_flags(df_in: pd.DataFrame, col: str, q: int = 4) -> pd.DataFrame:
@@ -479,7 +513,7 @@ def run_single_seed(
                         prob = mdl.predict_proba(Xvai)[:, 1]
                     else:
                         scores = mdl.decision_function(Xvai)
-                        prob = (scores - scores.min()) / (scores.max() - scores.min() + 1e-8)
+                        prob = safe_divide(scores - scores.min(), scores.max() - scores.min())
                 proba_list.append(prob)
                 # Save to OOF
                 if name in oof_per_model:
@@ -517,7 +551,7 @@ def run_single_seed(
                     prob = mdl.predict_proba(Xte_s)[:, 1]
                 else:
                     scores = mdl.decision_function(Xte_s)
-                    prob = (scores - scores.min()) / (scores.max() - scores.min() + 1e-8)
+                    prob = safe_divide(scores - scores.min(), scores.max() - scores.min())
             holdout_probas.append(prob)
         except Exception:
             continue

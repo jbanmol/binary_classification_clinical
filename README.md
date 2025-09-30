@@ -2,15 +2,26 @@
 
 This README documents the entire training and prediction stack with file-level detail: how raw Coloring sessions become child-level features, how models are trained/combined/calibrated, and how predictions are produced. It also includes a dependency graph of the main components and guidance on robustness and CV variance.
 
+**Recent Updates:** The system includes critical fixes for division-by-zero protection and LightGBM threading issues, ensuring robust operation across all environments.
+
 ### Quickstart (Predictions)
 ```bash
+# 1. Setup environment
 python3 -m venv venv && ./venv/bin/python -m pip install --upgrade pip && ./venv/bin/pip install -r requirements.txt
+
+# 2. Run end-to-end prediction on new data
 ./venv/bin/python scripts/e2e_predict.py --raw data/raw/phase2_file_keys
 ```
-Outputs:
-- `results/phase2_file_keys_features_raw.csv`
-- `results/phase2_file_keys_features_aligned.csv`
-- `phase2_file_keys_results.csv` (columns: `child_id, prob_asd, pred_label`)
+
+**Outputs:**
+- `results/phase2_file_keys_features_raw.csv` - Human-readable extracted features
+- `results/phase2_file_keys_features_aligned.csv` - Model-ready aligned features  
+- `data_experiments/phase2_file_keys_results.csv` - Final predictions (columns: `child_id, prob_asd, pred_label`)
+
+**Prediction Format:**
+- `child_id`: Unique identifier for each child
+- `prob_asd`: Model probability (0.0-1.0) that child has ASD
+- `pred_label`: Binary prediction (1=ASD, 0=TD) using clinical threshold
 
 ### Labels and Classes
 - Positive class: `1 = ASD`
@@ -104,6 +115,7 @@ train_final.sh
 [Prediction]
 scripts/e2e_predict.py
   ├── rag_system/research_engine.py (labeled) OR internal unlabeled builder
+  ├── safe_divide() for robust feature engineering
   ├── align to bundle['feature_columns'] → save features
   └── scripts/predict_cli.py
         ├── load bundle.json
@@ -158,16 +170,83 @@ See `references/results.md` for full numbers. Highlights:
 ---
 
 ## Prediction on New Data
+
+### Method 1: End-to-End Prediction (Recommended)
+For raw coloring session data:
+
 ```bash
+# Interactive mode (prompts for folder selection)
+./venv/bin/python scripts/e2e_predict.py
+
+# Non-interactive mode (specify raw data folder)
 ./venv/bin/python scripts/e2e_predict.py --raw /path/to/raw_coloring_data
 ```
-Outputs:
-- `results/<raw_folder_name>_features_raw.csv` and `results/<raw_folder_name>_features_aligned.csv`
-- `<project_root>/<raw_folder_name>_results.csv` with `prob_asd` and `pred_label` (1=ASD, 0=TD)
 
-Requirements for scoring:
-- `models/final_np_iqrmid_u16n50_k2/` with `bundle.json` (including `feature_columns`) and joblibs.
-- `requirements.txt` installed; `imbalanced-learn` required if `brf` is included.
+**Requirements:**
+- Raw coloring session JSON files in folder structure: `folder/child_id/Coloring_*.json`
+- Model bundle: `models/final_np_iqrmid_u16n50_k2/` (included in repository)
+- Dependencies: `requirements.txt` installed
+
+**Outputs:**
+- `results/<raw_folder_name>_features_raw.csv` - Human-readable extracted features
+- `results/<raw_folder_name>_features_aligned.csv` - Model-ready aligned features
+- `data_experiments/<raw_folder_name>_results.csv` - Final predictions
+
+### Method 2: Direct Bundle Scoring
+For pre-processed feature data:
+
+```bash
+./venv/bin/python scripts/predict_cli.py \
+  --bundle models/final_np_iqrmid_u16n50_k2/bundle.json \
+  --in results/your_features_aligned.csv \
+  --out predictions.csv
+```
+
+**Requirements:**
+- Input CSV with features matching `bundle['feature_columns']`
+- Model bundle: `models/final_np_iqrmid_u16n50_k2/`
+- Dependencies: `requirements.txt` installed; `imbalanced-learn` required for Balanced Random Forest
+
+### Output Format
+All prediction outputs contain:
+- `child_id`: Unique identifier for each child
+- `prob_asd`: Model probability (0.0-1.0) that child has ASD  
+- `pred_label`: Binary prediction (1=ASD, 0=TD) using clinical threshold
+
+### Model Performance
+- **AUC**: 0.9059 (bagged ensemble)
+- **Sensitivity**: 0.8824 (meets clinical target ≥86%)
+- **Specificity**: 0.8000 (exceeds clinical target ≥70%)
+- **Clinical Threshold**: ~0.5210 (optimized for clinical targets)
+
+### Troubleshooting
+
+**Common Issues:**
+
+1. **"No Coloring_*.json files found"**
+   - Ensure your data folder contains JSON files with names starting with "Coloring_"
+   - Check folder structure: `your_folder/child_id/Coloring_*.json`
+
+2. **"ModuleNotFoundError" or import errors**
+   - Ensure virtual environment is activated: `source venv/bin/activate`
+   - Install dependencies: `pip install -r requirements.txt`
+
+3. **"Bundle not found" errors**
+   - Verify model bundle exists: `ls models/final_np_iqrmid_u16n50_k2/`
+   - Bundle should contain: `bundle.json`, `models/`, `preprocess/` folders
+
+4. **Segmentation faults or crashes**
+   - The system includes automatic threading fixes for LightGBM
+   - If issues persist, ensure you're using the latest code with threading fixes
+
+5. **Feature mismatch errors**
+   - Use Method 1 (end-to-end) for raw data to avoid feature alignment issues
+   - For Method 2, ensure input CSV matches expected feature columns
+
+**Getting Help:**
+- Check `references/predict_e2e.md` for detailed prediction guide
+- Review `SYSTEM_REVIEW.md` for system validation and performance details
+- Ensure you're using the latest version with all critical fixes applied
 
 ---
 
