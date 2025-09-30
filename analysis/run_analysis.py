@@ -155,13 +155,27 @@ def create_synthetic_labels(features_df: pd.DataFrame) -> pd.DataFrame:
 def load_features_with_labels() -> Tuple[Optional[pd.DataFrame], bool]:
     """Load features and merge with labels from available sources"""
     
-    # Find latest features file
-    feature_files = list(Path("results").glob("*features_aligned.csv"))
+    # PRIORITY: Look for fileKeys_features_aligned.csv first (correct Unity_id format)
+    feature_files = []
+    
+    # Check for the correct file with Unity_id format first
+    correct_file = Path("results/fileKeys_features_aligned.csv")
+    if correct_file.exists():
+        feature_files.append(correct_file)
+        print(f"🎯 Found CORRECT features file: {correct_file.name} (Unity_id format)")
+    
+    # Then check for any other features files as fallback
+    other_files = list(Path("results").glob("*features_aligned.csv"))
+    for file in other_files:
+        if file not in feature_files:
+            feature_files.append(file)
+    
     if not feature_files:
         print("❌ No processed feature files found in results/")
         return None, False
     
-    feature_file = sorted(feature_files)[-1]
+    # Use the first (priority) file
+    feature_file = feature_files[0]
     print(f"📊 Loading features from: {feature_file.name}")
     
     try:
