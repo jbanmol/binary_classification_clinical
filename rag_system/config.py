@@ -22,16 +22,48 @@ def _resolve_project_path() -> Path:
 
 
 def _resolve_raw_data_path() -> Path:
-    """Resolve raw data path with env override, fallback to data/raw/fileKeys."""
-    # Prefer env var, fallback to relative path from config.py location
-    default = str(Path(__file__).resolve().parent.parent / "data" / "raw" / "fileKeys")
-    return Path(os.getenv("RAW_DATA_PATH", default)).expanduser().resolve()
+    """Resolve raw data path with env override, fallback to data/raw/fileKeys.
+    Also handles CSV files by checking for fileKeys.csv in project root.
+    """
+    # Check environment variable first
+    env_path = os.getenv("RAW_DATA_PATH")
+    if env_path:
+        return Path(env_path).expanduser().resolve()
+    
+    # Check for CSV file in project root
+    project_root = _resolve_project_path()
+    csv_file = project_root / "fileKeys.csv"
+    if csv_file.exists():
+        return csv_file
+    
+    # Fallback to directory structure
+    default = project_root / "data" / "raw" / "fileKeys"
+    return default.resolve()
 
 
 def _resolve_labels_path() -> Path:
-    """Resolve labels CSV path with env override, fallback to data/processed/labels.csv."""
-    default = str(Path(__file__).resolve().parent.parent / "data" / "processed" / "labels.csv")
-    return Path(os.getenv("LABELS_PATH", default)).expanduser().resolve()
+    """Resolve labels CSV path with env override, fallback to data/processed/labels.csv.
+    Also checks common variations like labels.csv in project root.
+    """
+    env_path = os.getenv("LABELS_PATH")
+    if env_path:
+        return Path(env_path).expanduser().resolve()
+    
+    project_root = _resolve_project_path()
+    
+    # Check common label file locations in order of preference
+    candidates = [
+        project_root / "data" / "processed" / "labels.csv",
+        project_root / "labels.csv",
+        project_root / "data" / "knowledge_base" / "lables_fileKeys.csv",  # typo preserved from original
+    ]
+    
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate.resolve()
+    
+    # Return default even if it doesn't exist
+    return candidates[0].resolve()
 
 
 @dataclass
@@ -127,9 +159,15 @@ class RAGConfig:
     ])
 
     def __post_init__(self):
-        """Create necessary directories"""
+        """Create necessary directories and validate paths"""
         self.RAG_DATA_PATH.mkdir(parents=True, exist_ok=True)
         self.VECTOR_DB_PATH.mkdir(parents=True, exist_ok=True)
+        
+        # Log resolved paths for debugging
+        print(f"[CONFIG] RAW_DATA_PATH: {self.RAW_DATA_PATH}")
+        print(f"[CONFIG] LABELS_PATH: {self.LABELS_PATH}")
+        print(f"[CONFIG] RAW_DATA_PATH exists: {self.RAW_DATA_PATH.exists()}")
+        print(f"[CONFIG] LABELS_PATH exists: {self.LABELS_PATH.exists()}")
 
 
 # Global configuration instance
@@ -148,7 +186,7 @@ def is_coloring_file(filepath: Path) -> bool:
 
 def extract_child_id(filepath: Path) -> str:
     """Extract child ID from file path or filename"""
-    if filepath.parent.name != "fileKeys":
+    if filepath.parent.name != "fileKeys" and filepath.parent.name != "":
         return filepath.parent.name
     # Fallback: extract from filename
     return filepath.name.split("_")[-1].replace(".json", "")
