@@ -2,7 +2,6 @@
 
 This README documents the entire training and prediction stack with file-level detail: how raw Coloring sessions become child-level features, how models are trained/combined/calibrated, and how predictions are produced. It also includes a dependency graph of the main components and guidance on robustness and CV variance.
 
-**Recent Updates:** The system includes critical fixes for division-by-zero protection and LightGBM threading issues, ensuring robust operation across all environments.
 
 ### Quickstart (Predictions)
 ```bash

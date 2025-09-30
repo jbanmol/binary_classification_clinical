@@ -192,6 +192,8 @@ class RAGResearchEngine:
         self.behavioral_database = []
         self._initialize_vector_db()
         self._label_centroids = {}
+        # Cache SafeEmbedder to avoid reloading model (10s overhead per call)
+        self._safe_embedder = create_safe_embedder()
     
     def _initialize_vector_db(self):
         """Initialize ChromaDB vector database"""
@@ -311,10 +313,9 @@ class RAGResearchEngine:
         metadatas = [doc['metadata'] for doc in summaries]
         ids = [doc['id'] for doc in summaries]
         
-        # Use SafeEmbedder instead of direct encoding to prevent hanging
+        # Use cached SafeEmbedder to prevent hanging and avoid reloading model
         print(f"Generating embeddings for {len(texts)} behavioral summaries using SafeEmbedder...")
-        safe_embedder = create_safe_embedder()
-        embeddings = safe_embedder.encode_texts_batched(texts)
+        embeddings = self._safe_embedder.encode_texts_batched(texts)
         if embeddings is None:
             raise RuntimeError("Failed to generate embeddings with SafeEmbedder")
         

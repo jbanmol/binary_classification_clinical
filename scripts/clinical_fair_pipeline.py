@@ -29,6 +29,9 @@ except ImportError:
         ("VECLIB_MAXIMUM_THREADS", "1"),
         ("NUMEXPR_NUM_THREADS", "1"),
         ("LIGHTGBM_NUM_THREADS", "1"),
+        # macOS stability knobs
+        ("ACCELERATE_NEW_LAPACK", "1"),
+        ("KMP_DUPLICATE_LIB_OK", "TRUE"),
     ):
         os.environ.setdefault(_k, _v)
 
@@ -125,8 +128,22 @@ def build_child_dataset() -> Tuple[pd.DataFrame, np.ndarray, List[str]]:
     from rag_system.research_engine import research_engine  # type: ignore
     try:
         from rag_system import config as rag_config  # type: ignore
-        rag_config.config.RAW_DATA_PATH = Path("data/raw/fileKeys").resolve()
-        rag_config.config.LABELS_PATH = Path("data/knowledge_base/lables_fileKeys.csv").resolve()
+        # Prefer env overrides, fallback to defaults
+        import os as _os
+        raw_default = Path("data/raw/fileKeys").resolve()
+        raw_path = Path(_os.getenv("RAW_DATA_PATH", str(raw_default))).resolve()
+        # Candidate labels paths, in order of preference
+        lbl_env = _os.getenv("LABELS_PATH", "")
+        lbl_candidates = [
+            Path(lbl_env).resolve() if lbl_env else None,
+            Path("data/knowledge_base/lables_fileKeys.csv").resolve(),
+            Path("data/processed/labels.csv").resolve(),
+        ]
+        rag_config.config.RAW_DATA_PATH = raw_path
+        for _lp in lbl_candidates:
+            if _lp and _lp.exists():
+                rag_config.config.LABELS_PATH = _lp
+                break
     except Exception:
         pass
     
@@ -390,6 +407,9 @@ def make_models(model_names: List[str], seed: int = 42):
                 random_state=seed,
                 scale_pos_weight=1.0,
                 verbosity=-1,
+                # Threading and stability
+                n_jobs=1,
+                force_row_wise=True,
             )
             models.append(('lightgbm', mdl))
         elif name == 'lgbm_grid' and _lgbm_ok:
@@ -407,6 +427,9 @@ def make_models(model_names: List[str], seed: int = 42):
                             random_state=seed,
                             scale_pos_weight=spw,
                             verbosity=-1,
+                            # Threading and stability
+                            n_jobs=1,
+                            force_row_wise=True,
                         )
                         name_tag = f"lgbm_mc{mcs}_ff{ff}_spw{spw}"
                         models.append((name_tag, mdl))
