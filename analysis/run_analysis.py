@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 import pandas as pd
 import json
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 
 def print_header():
     """Print analysis header"""
@@ -27,44 +27,161 @@ def print_header():
     print("⚠️  Current Issue: High CV variance (60-90% sensitivity range)")
     print("🚀 Goal: Systematic performance improvement\n")
 
+def load_labels_from_rag() -> Optional[pd.DataFrame]:
+    """Try to load labels using the RAG system like the main pipeline does"""
+    try:
+        print("🔄 Attempting to load labels via RAG system...")
+        
+        # Import the research engine
+        sys.path.append(str(Path(__file__).resolve().parents[1]))
+        from rag_system.research_engine import research_engine
+        
+        # Check if behavioral database exists
+        if not research_engine.behavioral_database:
+            print("   📥 RAG database not loaded, ingesting data...")
+            research_engine.ingest_raw_data(limit=None)
+            research_engine.index_behavioral_data()
+        
+        if not research_engine.behavioral_database:
+            return None
+            
+        # Build dataframe from behavioral database
+        df = pd.DataFrame(research_engine.behavioral_database)
+        if df.empty:
+            return None
+            
+        # Filter to labeled data and get labels per child
+        df = df[df['binary_label'].isin(['ASD', 'TD'])].copy()
+        if df.empty:
+            return None
+            
+        # Get most common label per child (mode)
+        def mode_or_first(s: pd.Series):
+            m = s.mode()
+            return m.iloc[0] if not m.empty else s.iloc[0]
+        
+        child_labels = df.groupby('child_id')['binary_label'].agg(mode_or_first).reset_index()
+        child_labels['target'] = (child_labels['binary_label'] == 'ASD').astype(int)
+        child_labels = child_labels[['child_id', 'target']]
+        
+        print(f"   ✅ Loaded labels for {len(child_labels)} children from RAG system")
+        return child_labels
+        
+    except Exception as e:
+        print(f"   ⚠️ RAG system failed: {e}")
+        return None
+
+def load_labels_from_sample() -> Optional[pd.DataFrame]:
+    """Load labels from sample_clinical_data.csv as fallback"""
+    try:
+        sample_file = Path("sample_clinical_data.csv")
+        if not sample_file.exists():
+            return None
+            
+        df = pd.read_csv(sample_file)
+        if 'target' not in df.columns or 'child_id' not in df.columns:
+            return None
+            
+        # Get unique child-label pairs
+        child_labels = df[['child_id', 'target']].drop_duplicates()
+        print(f"   ✅ Loaded labels for {len(child_labels)} children from sample_clinical_data.csv")
+        return child_labels
+        
+    except Exception as e:
+        print(f"   ⚠️ Sample data loading failed: {e}")
+        return None
+
+def load_features_with_labels() -> Tuple[Optional[pd.DataFrame], bool]:
+    """Load features and merge with labels from available sources"""
+    
+    # Find latest features file
+    feature_files = list(Path("results").glob("*features_aligned.csv"))
+    if not feature_files:
+        print("❌ No processed feature files found in results/")
+        return None, False
+    
+    feature_file = sorted(feature_files)[-1]
+    print(f"📊 Loading features from: {feature_file.name}")
+    
+    try:
+        df_features = pd.read_csv(feature_file)
+        print(f"   Shape: {df_features.shape[0]} samples, {df_features.shape[1]} features")
+        
+        # Check if labels already exist
+        if 'target' in df_features.columns or 'label' in df_features.columns:
+            target_col = 'target' if 'target' in df_features.columns else 'label'
+            print(f"   ✅ Found existing target column: {target_col}")
+            if target_col != 'target':
+                df_features = df_features.rename(columns={target_col: 'target'})
+            return df_features, True
+        
+        # Need to merge with labels
+        print("   ⚠️ No target column found in features, attempting to merge with labels...")
+        
+        if 'child_id' not in df_features.columns:
+            print("   ❌ No child_id column found for merging")
+            return None, False
+        
+        # Try to load labels from different sources
+        child_labels = load_labels_from_rag()
+        if child_labels is None:
+            print("   🔄 Trying sample data as fallback...")
+            child_labels = load_labels_from_sample()
+        
+        if child_labels is None:
+            print("   ❌ Could not load labels from any source")
+            return None, False
+        
+        # Merge features with labels
+        print(f"   🔄 Merging {len(df_features)} feature rows with {len(child_labels)} labeled children...")
+        df_merged = df_features.merge(child_labels, on='child_id', how='inner')
+        
+        if df_merged.empty:
+            print("   ❌ No matching children found between features and labels")
+            print(f"   Features children: {df_features['child_id'].nunique()}")
+            print(f"   Labeled children: {len(child_labels)}")
+            return None, False
+        
+        print(f"   ✅ Successfully merged: {len(df_merged)} samples with labels")
+        return df_merged, True
+        
+    except Exception as e:
+        print(f"❌ Error loading features: {e}")
+        return None, False
+
 def check_requirements() -> bool:
     """Check if analysis requirements are met"""
     
     print("🔍 Checking analysis requirements...")
     
-    # Check for processed features
-    feature_files = list(Path("results").glob("*features_aligned.csv"))
-    if not feature_files:
-        print("❌ No processed feature files found in results/")
+    # Try to load features with labels
+    df, has_labels = load_features_with_labels()
+    
+    if df is None:
         print("💡 Run the main pipeline first: ./train_final.sh")
         return False
     
-    feature_file = sorted(feature_files)[-1]
-    print(f"✅ Found features: {feature_file.name}")
+    if not has_labels:
+        return False
     
-    # Check for training results
+    # Check training results
     result_files = list(Path("results").glob("final_s*_ho777_*.json"))
     if not result_files:
         print("⚠️ No training results found - some analyses will be limited")
     else:
         print(f"✅ Found {len(result_files)} training result files")
     
-    # Check data structure
-    try:
-        df = pd.read_csv(feature_file)
-        print(f"📊 Dataset: {df.shape[0]} samples, {df.shape[1]} columns")
-        
-        if 'label' not in df.columns and 'target' not in df.columns:
-            print("❌ No target column found")
-            return False
-        
-        target_col = 'label' if 'label' in df.columns else 'target'
-        class_dist = df[target_col].value_counts().to_dict()
-        print(f"🎯 Target distribution: {class_dist}")
-        
-    except Exception as e:
-        print(f"❌ Error reading features: {e}")
-        return False
+    # Check target distribution
+    target_col = 'target'
+    class_dist = df[target_col].value_counts().to_dict()
+    print(f"🎯 Target distribution: {class_dist}")
+    
+    # Calculate class balance
+    pos_rate = df[target_col].mean()
+    print(f"   ASD rate: {pos_rate:.1%} ({int(pos_rate * len(df))} of {len(df)})")
+    
+    if pos_rate < 0.1 or pos_rate > 0.9:
+        print("   ⚠️ Highly imbalanced dataset - analysis may be affected")
     
     print("✅ Requirements check passed\n")
     return True
@@ -331,6 +448,7 @@ def main():
         response = input("   Continue? [Y/n]: ").strip().lower()
         if response and response != 'y' and response != 'yes':
             print("\n👍 Analysis skipped. Run individual tools as needed:")
+            print("   python analysis/debug_columns.py")
             print("   python analysis/data_quality_analysis.py")
             print("   python analysis/feature_analysis.py")
             print("   python analysis/cv_variance_analysis.py")
